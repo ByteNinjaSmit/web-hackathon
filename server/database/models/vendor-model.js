@@ -31,7 +31,12 @@ const vendorSchema = new mongoose.Schema({
     default: false,
   },
     //   Add Address  related Fields
-    
+    address: {
+      street: String,
+      city: String,
+      state: String,
+      zipCode: String,
+  },
 
 
 });
