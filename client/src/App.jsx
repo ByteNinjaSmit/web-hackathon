@@ -15,6 +15,9 @@ import PaymentIntegration from './components/PaymentIntegration';
 import ChatSupport from './components/ChatSupport';
 import InventoryTracker from './components/InventoryTracker';
 import ProfileManagement from './components/ProfileManagement';
+import Favorites from "./components/Faviourites";
+import VendorRegistrationPage from "./pages/vendor/Vendor-Registeration-Page";
+import VendorLoginPage from "./pages/vendor/Vendor-Login-Page";
 
 //admin pages import
 import AdminLayout from "./components/AdminLayout";
@@ -47,16 +50,16 @@ const App = () => {
           <Route path="/chat" element={<ChatSupport />} />
           <Route path="/inventory" element={<InventoryTracker />} />
           <Route path="/profile" element={<ProfileManagement />} />
-          <Route path="admin" element={<AdminLayout />}>
-          <Route index element={<Dashboard />} />
-          <Route path="pending-verifications" element={<PendingVerifications />} />
-          <Route path="approved-suppliers" element={<ApprovedSuppliers />} />
-          <Route path="rejected-suppliers" element={<RejectedSuppliers />} />
-          <Route path="supplier-communication" element={<SupplierCommunication />} />
-          </Route>
+  <Route path="/admin" element={<AdminLayout />}>
+    <Route index element={<Dashboard />} />
+    <Route path="pending-verifications" element={<PendingVerifications />} />
+    <Route path="approved-suppliers" element={<ApprovedSuppliers />} />
+    <Route path="rejected-suppliers" element={<RejectedSuppliers />} />
+    <Route path="supplier-communication" element={<SupplierCommunication />} />
+  </Route>
 
-        </Routes>
-      </div>
+        </Routes >
+      </div >
     </>
   )
 }

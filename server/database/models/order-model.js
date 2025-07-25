@@ -74,6 +74,16 @@ const orderSchema = new Schema(
       enum: ["Pickup", "Onspot", "Delivery"],
       default: "Pickup",
     },
+
+    // Address Instructions for Delivery . 
+
+    deliveryAddressSnapshot: {
+      street: String,
+      city: String,
+      state: String,
+      postalCode: String,
+      
+    },
     discount: { type: Number, default: 0 },
     notes: { type: String, default: "" },
     isReviewed: { type: Boolean, default: false },

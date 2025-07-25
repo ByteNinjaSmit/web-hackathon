@@ -12,7 +12,8 @@ const userSchema = new mongoose.Schema({
   email: {
     type: String,
     required: true,
-    unique: true,
+    unique: true, 
+    lowercase: true,
   },
   phone: {
     type: String,
@@ -31,7 +32,18 @@ const userSchema = new mongoose.Schema({
     default: false,
   },
     //   Add Address  related Fields
-    
+    address: {
+      street: String,
+      city: String,
+      state: String,
+      zipCode: String,
+  } ,
+
+  verificationStatus: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected'],
+    default: 'pending',
+},
 
 
 });
