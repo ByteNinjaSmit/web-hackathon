@@ -19,6 +19,14 @@ import Favorites from "./components/Faviourites";
 import VendorRegistrationPage from "./pages/vendor/Vendor-Registeration-Page";
 import VendorLoginPage from "./pages/vendor/Vendor-Login-Page";
 
+//admin pages import
+import AdminLayout from "./components/AdminLayout";
+import Dashboard from "./pages/admin/Dashboard";
+import PendingVerifications from "./pages/admin/PendingVerifications";
+import ApprovedSuppliers from "./pages/admin/ApprovedSuppliers";
+import RejectedSuppliers from "./pages/admin/RejectedSuppliers";
+import SupplierCommunication from "./pages/admin/SupplierCommunication";
+
 const App = () => {
   const location = useLocation();
 
@@ -42,9 +50,16 @@ const App = () => {
           <Route path="/chat" element={<ChatSupport />} />
           <Route path="/inventory" element={<InventoryTracker />} />
           <Route path="/profile" element={<ProfileManagement />} />
-          <Route path="/favorites" element={<Favorites />} />
-        </Routes>
-      </div>
+  <Route path="/admin" element={<AdminLayout />}>
+    <Route index element={<Dashboard />} />
+    <Route path="pending-verifications" element={<PendingVerifications />} />
+    <Route path="approved-suppliers" element={<ApprovedSuppliers />} />
+    <Route path="rejected-suppliers" element={<RejectedSuppliers />} />
+    <Route path="supplier-communication" element={<SupplierCommunication />} />
+  </Route>
+
+        </Routes >
+      </div >
     </>
   )
 }
