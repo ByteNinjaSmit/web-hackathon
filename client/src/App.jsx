@@ -16,6 +16,8 @@ import ChatSupport from './components/ChatSupport';
 import InventoryTracker from './components/InventoryTracker';
 import ProfileManagement from './components/ProfileManagement';
 import Favorites from "./components/Faviourites";
+import VendorRegistrationPage from "./pages/vendor/Vendor-Registeration-Page";
+import VendorLoginPage from "./pages/vendor/Vendor-Login-Page";
 
 const App = () => {
   const location = useLocation();
@@ -25,6 +27,8 @@ const App = () => {
       <div className="app">
         {/* Routes */}
         <Routes>
+          <Route path="/vendor-register" element={<VendorRegistrationPage />} />
+          <Route path="/vendor-Login" element={<VendorLoginPage />} />
           <Route path="/" element={<StreetFoodDashboard />} />
           <Route path="/home" element={<StreetFoodDashboard />} />
           <Route path="/login" element={<Login />} />
