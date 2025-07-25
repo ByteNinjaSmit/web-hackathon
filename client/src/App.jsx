@@ -15,6 +15,7 @@ import PaymentIntegration from './components/PaymentIntegration';
 import ChatSupport from './components/ChatSupport';
 import InventoryTracker from './components/InventoryTracker';
 import ProfileManagement from './components/ProfileManagement';
+import Favorites from "./components/Faviourites";
 
 const App = () => {
   const location = useLocation();
@@ -37,6 +38,7 @@ const App = () => {
           <Route path="/chat" element={<ChatSupport />} />
           <Route path="/inventory" element={<InventoryTracker />} />
           <Route path="/profile" element={<ProfileManagement />} />
+          <Route path="/favorites" element={<Favorites />} />
         </Routes>
       </div>
     </>
