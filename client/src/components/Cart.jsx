@@ -1,43 +1,318 @@
-import React from 'react';
-
-const cartItems = [
-  { id: 1, name: 'Onions', price: 40, quantity: 2, image: '🧅' },
-  { id: 2, name: 'Paneer', price: 120, quantity: 1, image: '🧀' },
-  { id: 3, name: 'Rice', price: 60, quantity: 3, image: '🌾' },
-];
+import React, { useState } from 'react';
+import { Search, MapPin, Star, Clock, Phone, ShoppingCart, Bell, User, Menu, X, Truck, Plus, Minus, Trash2, Tag, CreditCard } from 'lucide-react';
 
 const Cart = () => {
-  const total = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [cartItems, setCartItems] = useState([
+    {
+      id: 1,
+      vendorId: 1,
+      vendorName: 'Fresh Veggie Hub',
+      vendorImage: '🥬',
+      name: 'Fresh Onions',
+      unit: 'kg',
+      price: 30,
+      quantity: 5,
+      image: '🧅'
+    },
+    {
+      id: 2,
+      vendorId: 1,
+      vendorName: 'Fresh Veggie Hub',
+      vendorImage: '🥬',
+      name: 'Tomatoes',
+      unit: 'kg',
+      price: 40,
+      quantity: 3,
+      image: '🍅'
+    },
+    {
+      id: 3,
+      vendorId: 2,
+      vendorName: 'Spice Kingdom',
+      vendorImage: '🌶️',
+      name: 'Garam Masala',
+      unit: 'gm',
+      price: 120,
+      quantity: 500,
+      image: '🌶️'
+    },
+    {
+      id: 4,
+      vendorId: 3,
+      vendorName: 'Dairy Fresh',
+      vendorImage: '🥛',
+      name: 'Fresh Milk',
+      unit: 'L',
+      price: 55,
+      quantity: 2,
+      image: '🥛'
+    }
+  ]);
+
+  const updateQuantity = (itemId, newQuantity) => {
+    if (newQuantity <= 0) {
+      removeItem(itemId);
+      return;
+    }
+    setCartItems(cartItems.map(item => 
+      item.id === itemId 
+        ? { ...item, quantity: newQuantity }
+        : item
+    ));
+  };
+
+  const removeItem = (itemId) => {
+    setCartItems(cartItems.filter(item => item.id !== itemId));
+  };
+
+  const groupedItems = cartItems.reduce((acc, item) => {
+    if (!acc[item.vendorId]) {
+      acc[item.vendorId] = {
+        vendorName: item.vendorName,
+        vendorImage: item.vendorImage,
+        items: [],
+        subtotal: 0
+      };
+    }
+    acc[item.vendorId].items.push(item);
+    acc[item.vendorId].subtotal += item.price * item.quantity;
+    return acc;
+  }, {});
+
+  const totalAmount = Object.values(groupedItems).reduce((sum, vendor) => sum + vendor.subtotal, 0);
+  const deliveryFee = totalAmount > 500 ? 0 : 30;
+  const finalAmount = totalAmount + deliveryFee;
+
   return (
-    <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-md p-6 mt-8">
-      <h2 className="text-xl font-bold text-purple-900 mb-6">Your Cart</h2>
-      <ul className="divide-y divide-gray-200 mb-6">
-        {cartItems.map(item => (
-          <li key={item.id} className="flex items-center justify-between py-4">
-            <div className="flex items-center gap-3">
-              <span className="text-2xl">{item.image}</span>
-              <span className="font-medium text-gray-900">{item.name}</span>
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b border-purple-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-16">
+            {/* Logo */}
+            <a href="/" className="flex items-center space-x-3">
+              <div className="bg-purple-600 p-2 rounded-xl">
+                <Truck className="h-6 w-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-purple-900">StreetSupply</h1>
+                <p className="text-xs text-purple-600">Raw Materials Hub</p>
+              </div>
+            </a>
+
+            {/* Desktop Navigation */}
+            <nav className="hidden md:flex items-center space-x-8">
+              <a href="/" className="text-gray-600 hover:text-purple-600">Home</a>
+              <a href="/orders" className="text-gray-600 hover:text-purple-600">Orders</a>
+              <a href="/favorites" className="text-gray-600 hover:text-purple-600">Favorites</a>
+              <a href="#" className="text-gray-600 hover:text-purple-600">Help</a>
+            </nav>
+
+            {/* Right Side Icons */}
+            <div className="flex items-center space-x-4">
+              <button className="relative p-2 text-gray-600 hover:text-purple-600">
+                <Bell className="h-5 w-5" />
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">3</span>
+              </button>
+              <a href="/cart" className="p-2 text-purple-600">
+                <ShoppingCart className="h-5 w-5" />
+              </a>
+              <a href="/profile" className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+                <User className="h-4 w-4" />
+                <span className="hidden sm:block">Profile</span>
+              </a>
+              
+              {/* Mobile Menu Button */}
+              <button 
+                className="md:hidden p-2 text-gray-600"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              >
+                {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </button>
             </div>
-            <div className="flex items-center gap-2">
-              <button className="w-8 h-8 rounded bg-purple-100 text-purple-600 font-bold text-lg" disabled>-</button>
-              <span className="w-8 text-center">{item.quantity}</span>
-              <button className="w-8 h-8 rounded bg-purple-100 text-purple-600 font-bold text-lg" disabled>+</button>
+          </div>
+        </div>
+
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <div className="md:hidden bg-white border-t border-purple-100">
+            <div className="px-4 py-3 space-y-3">
+              <a href="/" className="block text-gray-600">Home</a>
+              <a href="/orders" className="block text-gray-600">Orders</a>
+              <a href="/favorites" className="block text-gray-600">Favorites</a>
+              <a href="#" className="block text-gray-600">Help</a>
             </div>
-            <span className="font-semibold text-gray-700">₹{item.price * item.quantity}</span>
-          </li>
-        ))}
-      </ul>
-      <div className="flex justify-between items-center mb-4">
-        <span className="text-gray-600">Estimated Delivery:</span>
-        <span className="font-medium text-purple-700">20-30 mins</span>
+          </div>
+        )}
+      </header>
+
+      {/* Page Header */}
+      <div className="bg-gradient-to-r from-purple-600 to-purple-800 text-white py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="text-3xl font-bold mb-2">Shopping Cart</h2>
+          <p className="text-purple-100">Review and checkout your selected items</p>
+        </div>
       </div>
-      <div className="flex justify-between items-center mb-6">
-        <span className="text-lg font-semibold text-gray-900">Total</span>
-        <span className="text-lg font-bold text-purple-800">₹{total}</span>
-      </div>
-      <button className="w-full bg-purple-600 text-white py-3 rounded-lg font-semibold hover:bg-purple-700 transition-colors">Checkout</button>
+
+      {cartItems.length === 0 ? (
+        // Empty Cart
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+          <div className="text-center">
+            <ShoppingCart className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Your cart is empty</h3>
+            <p className="text-gray-600 mb-4">Add some items to get started</p>
+            <a
+              href="/"
+              className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+            >
+              Start Shopping
+            </a>
+          </div>
+        </div>
+      ) : (
+        // Cart with Items
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Cart Items */}
+            <div className="lg:col-span-2 space-y-6">
+              {Object.entries(groupedItems).map(([vendorId, vendor]) => (
+                <div key={vendorId} className="bg-white rounded-xl shadow-sm border border-gray-200">
+                  {/* Vendor Header */}
+                  <div className="px-6 py-4 border-b border-gray-200">
+                    <div className="flex items-center space-x-3">
+                      <div className="text-2xl">{vendor.vendorImage}</div>
+                      <div>
+                        <h3 className="font-semibold text-gray-900">{vendor.vendorName}</h3>
+                        <p className="text-sm text-gray-600">Subtotal: ₹{vendor.subtotal}</p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Items */}
+                  <div className="px-6 py-4 space-y-4">
+                    {vendor.items.map((item) => (
+                      <div key={item.id} className="flex items-center justify-between">
+                        <div className="flex items-center space-x-4">
+                          <div className="text-2xl">{item.image}</div>
+                          <div>
+                            <h4 className="font-medium text-gray-900">{item.name}</h4>
+                            <p className="text-sm text-gray-600">₹{item.price} per {item.unit}</p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center space-x-4">
+                          {/* Quantity Controls */}
+                          <div className="flex items-center space-x-2">
+                            <button
+                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                              className="p-1 border border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
+                            >
+                              <Minus className="h-4 w-4 text-gray-600" />
+                            </button>
+                            <span className="w-12 text-center font-medium">
+                              {item.quantity} {item.unit}
+                            </span>
+                            <button
+                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              className="p-1 border border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
+                            >
+                              <Plus className="h-4 w-4 text-gray-600" />
+                            </button>
+                          </div>
+
+                          {/* Price */}
+                          <div className="text-lg font-semibold text-gray-900 w-20 text-right">
+                            ₹{item.price * item.quantity}
+                          </div>
+
+                          {/* Remove Button */}
+                          <button
+                            onClick={() => removeItem(item.id)}
+                            className="p-2 text-red-500 hover:text-red-700 transition-colors"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Order Summary */}
+            <div className="lg:col-span-1">
+              <div className="bg-white rounded-xl shadow-sm border border-gray-200 sticky top-8">
+                <div className="px-6 py-4 border-b border-gray-200">
+                  <h3 className="text-lg font-semibold text-gray-900">Order Summary</h3>
+                </div>
+
+                <div className="px-6 py-4 space-y-4">
+                  {/* Item Count */}
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Items ({cartItems.length})</span>
+                    <span className="font-medium">₹{totalAmount}</span>
+                  </div>
+
+                  {/* Delivery Fee */}
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Delivery Fee</span>
+                    <span className={`font-medium ${deliveryFee === 0 ? 'text-green-600' : ''}`}>
+                      {deliveryFee === 0 ? 'FREE' : `₹${deliveryFee}`}
+                    </span>
+                  </div>
+
+                  {/* Free Delivery Message */}
+                  {totalAmount < 500 && (
+                    <div className="text-xs text-gray-500 bg-gray-50 p-3 rounded-lg">
+                      Add ₹{500 - totalAmount} more for free delivery
+                    </div>
+                  )}
+
+                  {/* Total */}
+                  <div className="border-t border-gray-200 pt-4">
+                    <div className="flex justify-between text-lg font-semibold">
+                      <span>Total</span>
+                      <span className="text-purple-600">₹{finalAmount}</span>
+                    </div>
+                  </div>
+
+                  {/* Promo Code */}
+                  <div className="space-y-2">
+                    <div className="flex space-x-2">
+                      <input
+                        type="text"
+                        placeholder="Promo code"
+                        className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      />
+                      <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm">
+                        Apply
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Checkout Button */}
+                  <button className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 transition-colors font-medium flex items-center justify-center space-x-2">
+                    <CreditCard className="h-5 w-5" />
+                    <span>Proceed to Checkout</span>
+                  </button>
+
+                  {/* Continue Shopping */}
+                  <a
+                    href="/"
+                    className="block text-center text-purple-600 hover:text-purple-700 py-2"
+                  >
+                    Continue Shopping
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
-export default Cart; 
+export default Cart;
