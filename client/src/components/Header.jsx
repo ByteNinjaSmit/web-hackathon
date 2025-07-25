@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Truck, Bell, ShoppingCart, User, Menu, X } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -14,17 +15,19 @@ const Header = () => {
               <Truck className="h-6 w-6 text-white" />
             </div>
             <div>
-              <h1 className="text-xl font-bold text-purple-900">StreetSupply</h1>
-              <p className="text-xs text-purple-600">Raw Materials Hub</p>
+              <Link to="/">
+                <h1 className="text-xl font-bold text-purple-900">StreetSupply</h1>
+                <p className="text-xs text-purple-600">Raw Materials Hub</p>
+              </Link>
             </div>
           </div>
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center space-x-8">
-            <a href="#" className="text-purple-900 hover:text-purple-600 font-medium">Home</a>
-            <a href="#" className="text-gray-600 hover:text-purple-600">Orders</a>
-            <a href="#" className="text-gray-600 hover:text-purple-600">Favorites</a>
-            <a href="#" className="text-gray-600 hover:text-purple-600">Help</a>
+            <Link to="/" className="text-purple-900 hover:text-purple-600 font-medium">Home</Link>
+            <Link to="/orders" className="text-gray-600 hover:text-purple-600">Orders</Link>
+            <Link to="/favorites" className="text-gray-600 hover:text-purple-600">Favorites</Link>
+            <Link to="/help" className="text-gray-600 hover:text-purple-600">Help</Link>
           </nav>
 
           {/* Right Side Icons */}
@@ -33,13 +36,13 @@ const Header = () => {
               <Bell className="h-5 w-5" />
               <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">3</span>
             </button>
-            <button className="p-2 text-gray-600 hover:text-purple-600">
+            <Link to="/cart" className="p-2 text-gray-600 hover:text-purple-600">
               <ShoppingCart className="h-5 w-5" />
-            </button>
-            <button className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+            </Link>
+            <Link to="/profile" className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
               <User className="h-4 w-4" />
               <span className="hidden sm:block">Profile</span>
-            </button>
+            </Link>
 
             {/* Mobile Menu Button */}
             <button
@@ -56,10 +59,12 @@ const Header = () => {
       {isMobileMenuOpen && (
         <div className="md:hidden bg-white border-t border-purple-100">
           <div className="px-4 py-3 space-y-3">
-            <a href="#" className="block text-purple-900 font-medium">Home</a>
-            <a href="#" className="block text-gray-600">Orders</a>
-            <a href="#" className="block text-gray-600">Favorites</a>
-            <a href="#" className="block text-gray-600">Help</a>
+            <Link to="/" className="block text-purple-900 font-medium" onClick={() => setIsMobileMenuOpen(false)}>Home</Link>
+            <Link to="/orders" className="block text-gray-600" onClick={() => setIsMobileMenuOpen(false)}>Orders</Link>
+            <Link to="/favorites" className="block text-gray-600" onClick={() => setIsMobileMenuOpen(false)}>Favorites</Link>
+            <Link to="/help" className="block text-gray-600" onClick={() => setIsMobileMenuOpen(false)}>Help</Link>
+            <Link to="/cart" className="block text-gray-600" onClick={() => setIsMobileMenuOpen(false)}>Cart</Link>
+            <Link to="/profile" className="block text-gray-600" onClick={() => setIsMobileMenuOpen(false)}>Profile</Link>
           </div>
         </div>
       )}

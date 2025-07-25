@@ -2,12 +2,19 @@ import React from "react";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import './App.css'
 
-// Import your components
+// Import main components
 import StreetFoodDashboard from './components/StreetFoodDashboard';
-// You can add more components later like:
-// import Orders from './components/Orders';
-// import Profile from './components/Profile';
-// import VendorDetails from './components/VendorDetails';
+import Login from './components/Login';
+import Signup from './components/Signup';
+import ForgotPassword from './components/ForgotPassword';
+import OTPVerification from './components/OTPVerification';
+import VendorMarketplace from './components/VendorMarketplace';
+import Cart from './components/Cart';
+import OrderManagement from './components/OrderManagement';
+import PaymentIntegration from './components/PaymentIntegration';
+import ChatSupport from './components/ChatSupport';
+import InventoryTracker from './components/InventoryTracker';
+import ProfileManagement from './components/ProfileManagement';
 
 const App = () => {
   const location = useLocation();
@@ -19,10 +26,17 @@ const App = () => {
         <Routes>
           <Route path="/" element={<StreetFoodDashboard />} />
           <Route path="/home" element={<StreetFoodDashboard />} />
-          {/* Add more routes as needed */}
-          {/* <Route path="/orders" element={<Orders />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/vendor/:id" element={<VendorDetails />} /> */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/otp-verification" element={<OTPVerification />} />
+          <Route path="/marketplace" element={<VendorMarketplace />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/orders" element={<OrderManagement />} />
+          <Route path="/payment" element={<PaymentIntegration />} />
+          <Route path="/chat" element={<ChatSupport />} />
+          <Route path="/inventory" element={<InventoryTracker />} />
+          <Route path="/profile" element={<ProfileManagement />} />
         </Routes>
       </div>
     </>
