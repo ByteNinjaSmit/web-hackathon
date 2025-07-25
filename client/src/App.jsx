@@ -15,6 +15,8 @@ import PaymentIntegration from './components/PaymentIntegration';
 import ChatSupport from './components/ChatSupport';
 import InventoryTracker from './components/InventoryTracker';
 import ProfileManagement from './components/ProfileManagement';
+import VendorRegistrationPage from "./pages/vendor/Vendor-Registeration-Page";
+import VendorLoginPage from "./pages/vendor/Vendor-Login-Page";
 
 const App = () => {
   const location = useLocation();
