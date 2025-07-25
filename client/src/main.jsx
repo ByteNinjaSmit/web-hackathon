@@ -11,22 +11,20 @@ import AppWrapper from './App.jsx';
 createRoot(document.getElementById('root')).render(
   // <AuthProvider>
     <StrictMode>
-      <HeroUIProvider>
-        <AppWrapper />
-        <ToastContainer
-          position="top-right"
-          autoClose={2000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="colored"
-          bodyClassName="toastBody"
-        />
-      </HeroUIProvider>
+      <AppWrapper />
+      <ToastContainer
+        position="top-right"
+        autoClose={2000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+        theme="colored"
+        bodyClassName="toastBody"
+      />
     </StrictMode>
   // </AuthProvider>
 );

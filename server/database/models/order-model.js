@@ -54,14 +54,41 @@ const orderSchema = new Schema(
       type: String,
       default: "",
     },
-    trackId:{
-        type:String,
-        default:""
+    trackId: {
+      type: String,
+      default: "",
+    },
+    pickupTime: {
+      type: Date,
+    },
+    deliveryTime: {
+      type: Date,
     },
     status: {
       type: String,
       enum: ["Not Process", "Processing", "Delivered", "Cancelled"],
       default: "Not Process",
+    },
+    deliveryType: {
+      type: String,
+      enum: ["Pickup", "Onspot", "Delivery"],
+      default: "Pickup",
+    },
+    discount: { type: Number, default: 0 },
+    notes: { type: String, default: "" },
+    isReviewed: { type: Boolean, default: false },
+    buyerContactSnapshot: {
+      name: String,
+      phone: String,
+    },
+    pickupCoordinates: {
+      lat: Number,
+      lng: Number,
+    },
+    isCancelledBy: {
+      type: String,
+      enum: ["user", "vendor", "system", ""],
+      default: "",
     },
   },
   { timestamps: true }
