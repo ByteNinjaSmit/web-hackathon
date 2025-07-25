@@ -65,6 +65,11 @@ const productSchema = new mongoose.Schema(
       type: Boolean,
       default: true,
     },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
     notes: {
       type: String,
       default: "",
@@ -82,6 +87,10 @@ const productSchema = new mongoose.Schema(
     toJSON: { getters: true },
   }
 );
+
+productSchema.index({ supplierId: 1 });
+productSchema.index({ category: 1 });
+productSchema.index({ name: 1 });
 
 const Product = new mongoose.model("Product", productSchema);
 module.exports = Product;

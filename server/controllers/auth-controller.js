@@ -11,11 +11,28 @@ const Vendor = require("../database/models/vendor-model");
 
 // Helper to check profile completeness for user
 function checkUserProfileComplete(user) {
-  return !!(user.phone && user.foodStallName && user.address && user.address.street && user.location && user.location.lat && user.location.lng && user.typeOfCuisine);
+  return !!(
+    user.phone &&
+    user.foodStallName &&
+    user.address &&
+    user.address.street &&
+    user.location &&
+    user.location.lat &&
+    user.location.lng &&
+    user.typeOfCuisine
+  );
 }
 // Helper to check profile completeness for vendor
 function checkVendorProfileComplete(vendor) {
-  return !!(vendor.phone && vendor.businessName && vendor.address && vendor.address.street && vendor.location && vendor.location.lat && vendor.location.lng);
+  return !!(
+    vendor.phone &&
+    vendor.businessName &&
+    vendor.address &&
+    vendor.address.street &&
+    vendor.location &&
+    vendor.location.lat &&
+    vendor.location.lng
+  );
 }
 
 // =============================
@@ -23,7 +40,16 @@ function checkVendorProfileComplete(vendor) {
 // =============================
 const register = async (req, res, next) => {
   try {
-    const { name, email, phone, password, foodStallName, address, location, typeOfCuisine } = req.body;
+    const {
+      name,
+      email,
+      phone,
+      password,
+      foodStallName,
+      address,
+      location,
+      typeOfCuisine,
+    } = req.body;
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
@@ -151,20 +177,56 @@ const googleLogin = async (req, res, next) => {
 // Google Login for Food Stall Owners (User)
 const googleLoginUser = async (req, res, next) => {
   try {
-    const { email, name, picture, phone, foodStallName, address, location, typeOfCuisine } = req.body;
-    if (!email) return res.status(400).json({ success: false, message: "Email is required from Google profile." });
+    const {
+      email,
+      name,
+      picture,
+      phone,
+      foodStallName,
+      address,
+      location,
+      typeOfCuisine,
+    } = req.body;
+    if (!email)
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Email is required from Google profile.",
+        });
     let user = await User.findOne({ email });
     if (user) {
       if (!user.isGoogleAccount) {
-        return res.status(403).json({ success: false, message: "Account exists but not registered with Google. Use password login." });
+        return res
+          .status(403)
+          .json({
+            success: false,
+            message:
+              "Account exists but not registered with Google. Use password login.",
+          });
       }
       // Update missing fields if provided
       let updated = false;
-      if (phone && !user.phone) { user.phone = phone; updated = true; }
-      if (foodStallName && !user.foodStallName) { user.foodStallName = foodStallName; updated = true; }
-      if (address && !user.address?.street) { user.address = address; updated = true; }
-      if (location && !user.location?.lat) { user.location = location; updated = true; }
-      if (typeOfCuisine && !user.typeOfCuisine) { user.typeOfCuisine = typeOfCuisine; updated = true; }
+      if (phone && !user.phone) {
+        user.phone = phone;
+        updated = true;
+      }
+      if (foodStallName && !user.foodStallName) {
+        user.foodStallName = foodStallName;
+        updated = true;
+      }
+      if (address && !user.address?.street) {
+        user.address = address;
+        updated = true;
+      }
+      if (location && !user.location?.lat) {
+        user.location = location;
+        updated = true;
+      }
+      if (typeOfCuisine && !user.typeOfCuisine) {
+        user.typeOfCuisine = typeOfCuisine;
+        updated = true;
+      }
       if (updated) await user.save();
     } else {
       user = await User.create({
@@ -195,19 +257,44 @@ const googleLoginUser = async (req, res, next) => {
 // Google Login for Ingredient Suppliers (Vendor)
 const googleLoginVendor = async (req, res, next) => {
   try {
-    const { email, name, picture, phone, businessName, address, location } = req.body;
-    if (!email) return res.status(400).json({ success: false, message: "Email is required from Google profile." });
+    const { email, name, picture, phone, businessName, address, location } =
+      req.body;
+    if (!email)
+      return res
+        .status(400)
+        .json({
+          success: false,
+          message: "Email is required from Google profile.",
+        });
     let vendor = await Vendor.findOne({ email });
     if (vendor) {
       if (!vendor.isGoogleAccount) {
-        return res.status(403).json({ success: false, message: "Account exists but not registered with Google. Use password login." });
+        return res
+          .status(403)
+          .json({
+            success: false,
+            message:
+              "Account exists but not registered with Google. Use password login.",
+          });
       }
       // Update missing fields if provided
       let updated = false;
-      if (phone && !vendor.phone) { vendor.phone = phone; updated = true; }
-      if (businessName && !vendor.businessName) { vendor.businessName = businessName; updated = true; }
-      if (address && !vendor.address?.street) { vendor.address = address; updated = true; }
-      if (location && !vendor.location?.lat) { vendor.location = location; updated = true; }
+      if (phone && !vendor.phone) {
+        vendor.phone = phone;
+        updated = true;
+      }
+      if (businessName && !vendor.businessName) {
+        vendor.businessName = businessName;
+        updated = true;
+      }
+      if (address && !vendor.address?.street) {
+        vendor.address = address;
+        updated = true;
+      }
+      if (location && !vendor.location?.lat) {
+        vendor.location = location;
+        updated = true;
+      }
       if (updated) await vendor.save();
     } else {
       vendor = await Vendor.create({
@@ -237,7 +324,8 @@ const googleLoginVendor = async (req, res, next) => {
 // Vendor Register
 const registerVendor = async (req, res, next) => {
   try {
-    const { name, email, phone, password, businessName, address, location } = req.body;
+    const { name, email, phone, password, businessName, address, location } =
+      req.body;
     const existingVendor = await Vendor.findOne({ email });
     if (existingVendor) {
       return res.status(409).json({ message: "Vendor already exists." });
@@ -267,7 +355,9 @@ const loginVendor = async (req, res, next) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
-      return res.status(400).json({ message: "Email and password are required." });
+      return res
+        .status(400)
+        .json({ message: "Email and password are required." });
     }
     const vendor = await Vendor.findOne({ email });
     if (!vendor || vendor.isGoogleAccount) {
@@ -337,7 +427,6 @@ const getCurrentUser = async (req, res, next) => {
     next(error);
   }
 };
-
 
 module.exports = {
   googleLogin,

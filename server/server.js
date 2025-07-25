@@ -23,6 +23,9 @@ const connectToDatabase = require("./database/db");
 const logger = require('./utils/logger'); // Import the logger
 const authController = require("./controllers/auth-controller");
 const authRouter = require("./routes/auth-router");
+const productRouter = require("./routes/product-router");
+const orderRouter = require("./routes/order-router");
+const reviewRouter = require("./routes/review-router");
 
 
 // Middleware
@@ -180,6 +183,9 @@ app.get("/", (req, res) => {
 
 // Remaining Routes
 app.use("/api/auth", authRouter);
+app.use("/api/products", productRouter);
+app.use("/api/orders", orderRouter);
+app.use("/api/reviews", reviewRouter);
 
 // Broadcaster
 app.set("io", io);

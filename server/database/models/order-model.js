@@ -100,9 +100,18 @@ const orderSchema = new Schema(
       enum: ["user", "vendor", "system", ""],
       default: "",
     },
+    isDeleted: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
   },
   { timestamps: true }
 );
+
+orderSchema.index({ vendorId: 1 });
+orderSchema.index({ buyer: 1 });
+orderSchema.index({ status: 1 });
 
 const Order = new mongoose.model("Order", orderSchema);
 module.exports = Order;
