@@ -21,6 +21,8 @@ const redisClient = new Redis(process.env.REDIS_URL);
 // Workers
 const connectToDatabase = require("./database/db");
 const logger = require('./utils/logger'); // Import the logger
+const authController = require("./controllers/auth-controller");
+const authRouter = require("./routes/auth-router");
 
 
 // Middleware
@@ -177,6 +179,7 @@ app.get("/", (req, res) => {
 });
 
 // Remaining Routes
+app.use("/api/auth", authRouter);
 
 // Broadcaster
 app.set("io", io);

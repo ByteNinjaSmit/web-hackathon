@@ -37,15 +37,35 @@ const userSchema = new mongoose.Schema({
       city: String,
       state: String,
       zipCode: String,
-  } ,
+      country: String,
+    },
 
   verificationStatus: {
     type: String,
     enum: ['pending', 'approved', 'rejected'],
     default: 'pending',
 },
+  foodStallName: {
+    type: String,
+    required: function () {
+      return !this.isGoogleAccount;
+    },
+  },
+  location: {
+    lat: { type: Number },
+    lng: { type: Number },
+  },
+  typeOfCuisine: {
+    type: String,
+    required: function () {
+      return !this.isGoogleAccount;
+    },
+  },
 
+});
 
+userSchema.virtual('isProfileComplete').get(function () {
+  return !!(this.phone && this.foodStallName && this.address && this.address.street && this.location && this.location.lat && this.location.lng && this.typeOfCuisine);
 });
 
 // secure the password
