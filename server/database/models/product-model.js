@@ -48,10 +48,14 @@ const productSchema = new mongoose.Schema(
       ref: "Vendors",
       required: false,
     },
-    expiryTime: {
+   /* expiryTime: {
       type: String,
       required: false,
-    },
+    },*/ 
+    
+    expiryDate: {
+      type: Date,
+    } ,
     qualityCheck: {
       passed: { type: Boolean, default: true },
       inspector: { type: String, default: "Auto" },
@@ -63,6 +67,13 @@ const productSchema = new mongoose.Schema(
     },
     notes: {
       type: String,
+      default: "",
+    },
+
+    // Decription About the Product . 
+    description: {
+      type: String,
+      trim: true,
       default: "",
     },
   },
