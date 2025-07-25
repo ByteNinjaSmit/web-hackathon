@@ -3,7 +3,6 @@ import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import './App.css'
 
 // Import main components
-import StreetFoodDashboard from './components/StreetFoodDashboard';
 import Login from './components/Login';
 import Signup from './components/Signup';
 import ForgotPassword from './components/ForgotPassword';
@@ -20,12 +19,14 @@ import VendorRegistrationPage from "./pages/vendor/Vendor-Registeration-Page";
 import VendorLoginPage from "./pages/vendor/Vendor-Login-Page";
 
 //admin pages import
-import AdminLayout from "./components/AdminLayout";
+import AdminLayout from "./components/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import PendingVerifications from "./pages/admin/PendingVerifications";
 import ApprovedSuppliers from "./pages/admin/ApprovedSuppliers";
 import RejectedSuppliers from "./pages/admin/RejectedSuppliers";
 import SupplierCommunication from "./pages/admin/SupplierCommunication";
+import VendorDashboardPage from "./pages/vendor/Vendor-Dashboard-Page";
+import StreetFoodDashboard from "./components/StreetFoodDashboard";
 
 const App = () => {
   const location = useLocation();
@@ -50,13 +51,13 @@ const App = () => {
           <Route path="/chat" element={<ChatSupport />} />
           <Route path="/inventory" element={<InventoryTracker />} />
           <Route path="/profile" element={<ProfileManagement />} />
-  <Route path="/admin" element={<AdminLayout />}>
-    <Route index element={<Dashboard />} />
-    <Route path="pending-verifications" element={<PendingVerifications />} />
-    <Route path="approved-suppliers" element={<ApprovedSuppliers />} />
-    <Route path="rejected-suppliers" element={<RejectedSuppliers />} />
-    <Route path="supplier-communication" element={<SupplierCommunication />} />
-  </Route>
+          <Route path="/admin" element={<AdminLayout />}>
+            <Route index element={<VendorDashboardPage />} />
+            <Route path="pending-verifications" element={<PendingVerifications />} />
+            <Route path="approved-suppliers" element={<ApprovedSuppliers />} />
+            <Route path="rejected-suppliers" element={<RejectedSuppliers />} />
+            <Route path="supplier-communication" element={<SupplierCommunication />} />
+          </Route>
 
         </Routes >
       </div >
