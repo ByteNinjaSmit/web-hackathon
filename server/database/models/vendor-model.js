@@ -30,12 +30,23 @@ const vendorSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+  businessName: {
+    type: String,
+    required: function () {
+      return !this.isGoogleAccount;
+    },
+  },
+  location: {
+    lat: { type: Number },
+    lng: { type: Number },
+  },
     //   Add Address  related Fields
     address: {
       street: String,
       city: String,
       state: String,
       zipCode: String,
+      country: String,
   },
 
 
@@ -85,6 +96,10 @@ vendorSchema.methods.generateToken = async function () {
     console.error(error);
   }
 };
+
+vendorSchema.virtual('isProfileComplete').get(function () {
+  return !!(this.phone && this.businessName && this.address && this.address.street && this.location && this.location.lat && this.location.lng);
+});
 
 const Vendor = new mongoose.model("Vendors", vendorSchema);
 module.exports = Vendor;
