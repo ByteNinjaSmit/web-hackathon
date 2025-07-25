@@ -120,7 +120,7 @@ const sensitiveEndpointsLimiter = rateLimit({
     max: 10,
     standardHeaders: true,
     legacyHeaders: false,
-    keyGenerator: (req) => req.ip, // ✅ Use IP directly
+    keyGenerator: rateLimit.ipKeyGenerator, // ✅ Correct and safe
     handler: (req, res) => {
         logger.warn(`Sensitive endpoint rate limit exceeded for IP: ${req.ip}`);
         res.status(429).json({ success: false, message: "Too many requests" });
