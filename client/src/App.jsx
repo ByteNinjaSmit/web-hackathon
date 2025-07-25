@@ -1,6 +1,8 @@
 import React from "react";
 import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import './App.css'
+import VendorRegistrationPage from "./pages/vendor/Vendor-Registeration-Page";
+import VendorLoginPage from "./pages/vendor/Vendor-Login-Page";
 
 
 const App = () => {
@@ -8,10 +10,13 @@ const App = () => {
 
   return (
     <>
-        <div className="app">
-
-          {/* Routes */}
-        </div>
+      <div className="app">
+        {/* Routes */}
+        <Routes>
+          <Route path="/vendor-register" element={<VendorRegistrationPage />} />
+          <Route path="/vendor-Login" element={<VendorLoginPage />} />
+        </Routes>
+      </div>
     </>
   )
 }

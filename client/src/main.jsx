@@ -11,7 +11,6 @@ import AppWrapper from './App.jsx';
 createRoot(document.getElementById('root')).render(
   // <AuthProvider>
     <StrictMode>
-      <HeroUIProvider>
         <AppWrapper />
         <ToastContainer
           position="top-right"
@@ -26,7 +25,6 @@ createRoot(document.getElementById('root')).render(
           theme="colored"
           bodyClassName="toastBody"
         />
-      </HeroUIProvider>
     </StrictMode>
   // </AuthProvider>
 );
