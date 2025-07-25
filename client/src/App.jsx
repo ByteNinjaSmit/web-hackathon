@@ -3,8 +3,8 @@ import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import './App.css'
 
 // Import main components
-import Login from './components/Login';
-import Signup from './components/Signup';
+import Login from './components/auth/LoginForm';
+import Signup from './components/auth/SignupForm';
 import ForgotPassword from './components/ForgotPassword';
 import OTPVerification from './components/OTPVerification';
 import VendorMarketplace from './components/VendorMarketplace';
@@ -46,6 +46,7 @@ const App = () => {
           <Route path="/otp-verification" element={<OTPVerification />} />
           <Route path="/marketplace" element={<VendorMarketplace />} />
           <Route path="/cart" element={<Cart />} />
+          <Route path="/favorites" element={<Favorites />} />
           <Route path="/orders" element={<OrderManagement />} />
           <Route path="/payment" element={<PaymentIntegration />} />
           <Route path="/chat" element={<ChatSupport />} />
