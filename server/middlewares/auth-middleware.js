@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 const User = require("../database/models/user-model");
 const Admin = require("../database/models/admin-model"); // Assuming Faculty model exists
-const Developer = require("../database/models/developer-model");
+const Vendor = require("../database/models/vendor-model");
 
 const authMiddleware = async (req, res, next) => {
   const token = req.header("Authorization");
@@ -25,10 +25,10 @@ const authMiddleware = async (req, res, next) => {
 
     if (role === "user") {
       model = User; // Use User model for regular users
+    } else if (role === "vendor") {
+      model = Vendor; // Use Faculty model for admins or high-authority users
     } else if (role === "admin") {
       model = Admin; // Use Faculty model for admins or high-authority users
-    } else if (role === "developer") {
-      model = Developer; // Use Faculty model for admins or high-authority users
     } else {
       return res.status(401).json({ error: "Authentication token not found" });
     }
