@@ -34,6 +34,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useAuth } from "@/store/auth"
 
 // Mock data - replace with actual API calls
 const mockProducts = [
@@ -101,6 +102,7 @@ export default function VendorDashboard() {
   const [activeTab, setActiveTab] = useState("overview")
   const [products, setProducts] = useState(mockProducts)
   const [vendor, setVendor] = useState(mockVendor)
+  const { API , LogoutUser} = useAuth();
   const [searchTerm, setSearchTerm] = useState("")
   const [filterCategory, setFilterCategory] = useState("all")
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false)
@@ -134,10 +136,10 @@ export default function VendorDashboard() {
         products.map((p) =>
           p._id === editingProduct._id
             ? {
-                ...productForm,
-                _id: editingProduct._id,
-                totalPrice: productForm.stockQuantity * productForm.pricePerUnit,
-              }
+              ...productForm,
+              _id: editingProduct._id,
+              totalPrice: productForm.stockQuantity * productForm.pricePerUnit,
+            }
             : p,
         ),
       )
@@ -211,9 +213,8 @@ export default function VendorDashboard() {
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 transition-all duration-200 ${
-                activeTab === item.id ? "bg-white/20 text-white" : "text-white/80 hover:bg-white/10 hover:text-white"
-              }`}
+              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 transition-all duration-200 ${activeTab === item.id ? "bg-white/20 text-white" : "text-white/80 hover:bg-white/10 hover:text-white"
+                }`}
             >
               <item.icon className="w-5 h-5" />
               <span>{item.label}</span>
@@ -713,6 +714,13 @@ export default function VendorDashboard() {
                   </Button>
                   <Button variant="outline" className="w-full justify-start bg-transparent">
                     Two-Factor Authentication
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={LogoutUser}
+                    className="w-full justify-start text-red-600 hover:text-red-700 bg-transparent"
+                  >
+                    LogOut From this Account
                   </Button>
                   <Button
                     variant="outline"
