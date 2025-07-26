@@ -11,7 +11,7 @@ import { locationSearch } from '@/services/locationApi';
 import Header from '@/components/layout/Header';
 
 const StreetFoodDashboard = () => {
-  const { isLoggedIn, user, API } = useAuth();
+  const { isLoggedIn, user, authorizationToken } = useAuth();
   const { location, loading: locationLoading, error: locationError, requestLocation } = useLocation();
   
   const [searchQuery, setSearchQuery] = useState('');
@@ -62,7 +62,7 @@ const StreetFoodDashboard = () => {
           maxDistance,
           search: searchQuery || undefined,
           category: selectedCategory !== 'all' ? selectedCategory : undefined
-        });
+        }, isLoggedIn ? authorizationToken : null);
         setVendors(data.vendors || []);
         setProducts([]);
       } else {
@@ -72,7 +72,7 @@ const StreetFoodDashboard = () => {
           maxDistance,
           search: searchQuery || undefined,
           category: selectedCategory !== 'all' ? selectedCategory : undefined
-        });
+        }, isLoggedIn ? authorizationToken : null);
         setProducts(data.products || []);
         setVendors([]);
       }

@@ -16,6 +16,8 @@ import {
   DollarSign,
   TrendingUp,
   Save,
+  AlertCircle,
+  Loader2
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -35,79 +37,51 @@ import {
 } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { useAuth } from "@/store/auth"
+import { vendorProductApi } from "@/services/vendorProductApi"
+import { toast } from "react-toastify"
+import axios from "axios"
 
-// Mock data - replace with actual API calls
-const mockProducts = [
-  {
-    _id: "1",
-    name: "Fresh Tomatoes",
-    category: "Vegetables",
-    unit: "kg",
-    stockQuantity: 50,
-    pricePerUnit: 80,
-    totalPrice: 4000,
-    expiryDate: "2024-02-15",
-    isAvailable: true,
-    description: "Fresh organic tomatoes from local farms",
-  },
-  {
-    _id: "2",
-    name: "Basmati Rice",
-    category: "Grains",
-    unit: "kg",
-    stockQuantity: 100,
-    pricePerUnit: 120,
-    totalPrice: 12000,
-    expiryDate: "2024-12-31",
-    isAvailable: true,
-    description: "Premium quality basmati rice",
-  },
-  {
-    _id: "3",
-    name: "Fresh Milk",
-    category: "Dairy",
-    unit: "litre",
-    stockQuantity: 25,
-    pricePerUnit: 60,
-    totalPrice: 1500,
-    expiryDate: "2024-01-30",
-    isAvailable: false,
-    description: "Fresh cow milk from local dairy",
-  },
-]
-
-const mockVendor = {
-  _id: "vendor1",
-  name: "John Doe",
-  email: "john@example.com",
-  phone: "+91 9876543210",
-  businessName: "Fresh Mart Store",
-  location: {
-    coordinates: [77.209, 28.6139],
-  },
-  address: {
-    street: "123 Market Street",
-    city: "Delhi",
-    state: "Delhi",
-    zipCode: "110001",
-    country: "India",
-  },
-}
 
 const categories = ["Vegetables", "Fruits", "Dairy", "Grains", "Spices", "Condiments", "Meat", "Other"]
 const units = ["kg", "litre", "packet", "piece", "bottle"]
 
-export default function VendorDashboard() {
+export default function VendorDashboardPage() {
   const [mounted, setMounted] = useState(false)
   const [activeTab, setActiveTab] = useState("overview")
-  const [products, setProducts] = useState(mockProducts)
-  const [vendor, setVendor] = useState(mockVendor)
-  const { API , LogoutUser} = useAuth();
+  const [products, setProducts] = useState([])
+  const { user, LogoutUser, authorizationToken, API } = useAuth();
   const [searchTerm, setSearchTerm] = useState("")
   const [filterCategory, setFilterCategory] = useState("all")
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false)
   const [isProfileDialogOpen, setIsProfileDialogOpen] = useState(false)
   const [editingProduct, setEditingProduct] = useState(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isError, setIsError] = useState(false)
+  const [productStats, setProductStats] = useState({
+    totalProducts: 0,
+    totalValue: 0,
+    availableProducts: 0
+  })
+
+  // State for vendor information
+  const [vendor, setVendor] = useState({
+    _id: user?._id || "",
+    name: user?.name || "",
+    email: user?.email || "",
+    phone: user?.phone || "",
+    businessName: user?.businessName || "",
+    location: {
+      coordinates: user?.location?.coordinates || [0, 0],
+    },
+    address: {
+      street: user?.address?.street || "",
+      city: user?.address?.city || "",
+      state: user?.address?.state || "",
+      zipCode: user?.address?.zipCode || "",
+      country: user?.address?.country || "",
+    },
+  })
+
   const [productForm, setProductForm] = useState({
     name: "",
     category: "Other",
@@ -121,37 +95,70 @@ export default function VendorDashboard() {
 
   useEffect(() => {
     setMounted(true)
+    fetchProducts()
+    fetchProductStats()
   }, [])
 
-  const filteredProducts = products.filter((product) => {
+  // Function to fetch products from API
+  const fetchProducts = async () => {
+    setIsLoading(true)
+    setIsError(false)
+    try {
+      const response = await axios.get(`${API}/api/vendors/own-products`,{
+        headers: {
+          Authorization: authorizationToken,
+        },withCredentials:true,
+      });
+      if(response.status===200){
+        // console.log(`Response Data Product: `,response.data.products)
+        setProducts(response.data.products)
+      }
+    } catch (error) {
+      console.error("Error fetching products:", error)
+      setIsError(true)
+      toast.error("Failed to load products. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  // Function to fetch product statistics
+  const fetchProductStats = async () => {
+    try {
+      const response = await vendorProductApi.getProductStats(authorizationToken)
+      setProductStats(response.data)
+    } catch (error) {
+      console.error("Error fetching product stats:", error)
+    }
+  }
+
+  const filteredProducts = products && products.length > 0 ? products.filter((product) => {
     const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesCategory = filterCategory === "all" || product.category === filterCategory
     return matchesSearch && matchesCategory
-  })
+  }) : []
 
-  const handleProductSubmit = (e) => {
+  const handleProductSubmit = async (e) => {
     e.preventDefault()
-    if (editingProduct) {
-      setProducts(
-        products.map((p) =>
-          p._id === editingProduct._id
-            ? {
-              ...productForm,
-              _id: editingProduct._id,
-              totalPrice: productForm.stockQuantity * productForm.pricePerUnit,
-            }
-            : p,
-        ),
-      )
-    } else {
-      const newProduct = {
-        ...productForm,
-        _id: Date.now().toString(),
-        totalPrice: productForm.stockQuantity * productForm.pricePerUnit,
+    try {
+      if (editingProduct) {
+        // Update existing product
+        await vendorProductApi.updateProduct(editingProduct._id, productForm, authorizationToken)
+        toast.success("Product updated successfully")
+      } else {
+        // Add new product
+        await vendorProductApi.addProduct(productForm, authorizationToken)
+        toast.success("Product added successfully")
       }
-      setProducts([...products, newProduct])
+
+      // Refresh products list and stats
+      fetchProducts()
+      fetchProductStats()
+      resetProductForm()
+    } catch (error) {
+      console.error("Error saving product:", error)
+      toast.error(error.response?.data?.message || "Failed to save product. Please try again.")
     }
-    resetProductForm()
   }
 
   const resetProductForm = () => {
@@ -175,13 +182,27 @@ export default function VendorDashboard() {
     setIsProductDialogOpen(true)
   }
 
-  const handleDeleteProduct = (productId) => {
-    setProducts(products.filter((p) => p._id !== productId))
+  const handleDeleteProduct = async (productId) => {
+    try {
+      await vendorProductApi.deleteProduct(productId, authorizationToken)
+      toast.success("Product deleted successfully")
+      fetchProducts()
+      fetchProductStats()
+    } catch (error) {
+      console.error("Error deleting product:", error)
+      toast.error("Failed to delete product. Please try again.")
+    }
   }
 
-  const totalProducts = products.length
-  const totalValue = products.reduce((sum, product) => sum + product.totalPrice, 0)
-  const availableProducts = products.filter((p) => p.isAvailable).length
+  // These values will be used as fallbacks if the API stats are not available
+  const calculatedTotalProducts = products.length
+  const calculatedTotalValue = products.reduce((sum, product) => sum + (product.stockQuantity * product.pricePerUnit), 0)
+  const calculatedAvailableProducts = products.filter((p) => p.isAvailable).length
+
+  // Use API stats if available, otherwise use calculated values
+  const totalProducts = productStats?.totalProducts || calculatedTotalProducts
+  const totalValue = productStats?.totalValue || calculatedTotalValue
+  const availableProducts = productStats?.availableProducts || calculatedAvailableProducts
 
   const sidebarItems = [
     { id: "overview", label: "Overview", icon: BarChart3 },
@@ -245,328 +266,373 @@ export default function VendorDashboard() {
           {/* Overview Tab */}
           {activeTab === "overview" && (
             <div className="space-y-6">
-              {/* Stats Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Products</CardTitle>
-                    <Package className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{totalProducts}</div>
-                    <p className="text-xs text-muted-foreground">{availableProducts} available</p>
-                  </CardContent>
-                </Card>
+              {isLoading ? (
+                <div className="flex items-center justify-center h-64">
+                  <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+                  <span className="ml-2 text-lg">Loading dashboard data...</span>
+                </div>
+              ) : isError ? (
+                <div className="flex items-center justify-center h-64 text-red-500">
+                  <AlertCircle className="h-8 w-8 mr-2" />
+                  <span className="text-lg">Failed to load dashboard data. Please try refreshing the page.</span>
+                </div>
+              ) : (
+                <>
+                  {/* Stats Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Total Products</CardTitle>
+                        <Package className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">{totalProducts}</div>
+                        <p className="text-xs text-muted-foreground">{availableProducts} available</p>
+                      </CardContent>
+                    </Card>
 
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Total Inventory Value</CardTitle>
-                    <DollarSign className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">₹{totalValue.toLocaleString()}</div>
-                    <p className="text-xs text-muted-foreground">Across all products</p>
-                  </CardContent>
-                </Card>
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Total Inventory Value</CardTitle>
+                        <DollarSign className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold">₹{totalValue.toLocaleString()}</div>
+                        <p className="text-xs text-muted-foreground">Across all products</p>
+                      </CardContent>
+                    </Card>
 
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Business Status</CardTitle>
-                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-green-600">Active</div>
-                    <p className="text-xs text-muted-foreground">All systems operational</p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* Recent Products */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Products</CardTitle>
-                  <CardDescription>Your latest product listings</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {products.slice(0, 3).map((product) => (
-                      <div key={product._id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center space-x-4">
-                          <div className="w-12 h-12 bg-gradient-to-br from-[#4B0082] to-[#8A2BE2] rounded-lg flex items-center justify-center">
-                            <Package className="w-6 h-6 text-white" />
-                          </div>
-                          <div>
-                            <h4 className="font-medium">{product.name}</h4>
-                            <p className="text-sm text-gray-600">{product.category}</p>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-medium">
-                            ₹{product.pricePerUnit}/{product.unit}
-                          </p>
-                          <p className="text-sm text-gray-600">{product.stockQuantity} in stock</p>
-                        </div>
-                      </div>
-                    ))}
+                    <Card>
+                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-sm font-medium">Business Status</CardTitle>
+                        <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                      </CardHeader>
+                      <CardContent>
+                        <div className="text-2xl font-bold text-green-600">Active</div>
+                        <p className="text-xs text-muted-foreground">All systems operational</p>
+                      </CardContent>
+                    </Card>
                   </div>
-                </CardContent>
-              </Card>
+
+                  {/* Recent Products */}
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Recent Products</CardTitle>
+                      <CardDescription>Your latest product listings</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      {products.length === 0 ? (
+                        <div className="text-center py-6 text-gray-500">
+                          <Package className="h-12 w-12 mx-auto mb-2 opacity-30" />
+                          <p>No products available. Add your first product to get started.</p>
+                          <Button
+                            className="mt-4 bg-gradient-to-r from-[#4B0082] to-[#8A2BE2]"
+                            onClick={() => {
+                              setIsProductDialogOpen(true)
+                              setActiveTab("products")
+                            }}
+                          >
+                            <Plus className="w-4 h-4 mr-2" />
+                            Add Product
+                          </Button>
+                        </div>
+                      ) : (
+                        <div className="space-y-4">
+                          {products.slice(0, 3).map((product) => (
+                            <div key={product._id} className="flex items-center justify-between p-4 border rounded-lg">
+                              <div className="flex items-center space-x-4">
+                                <div className="w-12 h-12 bg-gradient-to-br from-[#4B0082] to-[#8A2BE2] rounded-lg flex items-center justify-center">
+                                  <Package className="w-6 h-6 text-white" />
+                                </div>
+                                <div>
+                                  <h4 className="font-medium">{product.name}</h4>
+                                  <p className="text-sm text-gray-600">{product.category}</p>
+                                </div>
+                              </div>
+                              <div className="text-right">
+                                <p className="font-medium">
+                                  ₹{product.pricePerUnit}/{product.unit}
+                                </p>
+                                <p className="text-sm text-gray-600">{product.stockQuantity} in stock</p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                </>
+              )}
             </div>
           )}
 
           {/* Products Tab */}
           {activeTab === "products" && (
             <div className="space-y-6">
-              {/* Actions Bar */}
-              <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
-                <div className="flex flex-col sm:flex-row gap-4 flex-1">
-                  <div className="relative flex-1 max-w-sm">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                    <Input
-                      placeholder="Search products..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10"
-                    />
-                  </div>
-                  <Select value={filterCategory} onValueChange={setFilterCategory}>
-                    <SelectTrigger className="w-48">
-                      <Filter className="w-4 h-4 mr-2" />
-                      <SelectValue placeholder="Filter by category" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Categories</SelectItem>
-                      {categories.map((category) => (
-                        <SelectItem key={category} value={category}>
-                          {category}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              {isLoading ? (
+                <div className="flex items-center justify-center h-64">
+                  <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+                  <span className="ml-2 text-lg">Loading products...</span>
                 </div>
-
-                <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="bg-gradient-to-r from-[#4B0082] to-[#8A2BE2] hover:from-[#5B1092] hover:to-[#9A3BF2]">
-                      <Plus className="w-4 h-4 mr-2" />
-                      Add Product
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-2xl">
-                    <DialogHeader>
-                      <DialogTitle>{editingProduct ? "Edit Product" : "Add New Product"}</DialogTitle>
-                      <DialogDescription>
-                        {editingProduct ? "Update your product information" : "Add a new product to your inventory"}
-                      </DialogDescription>
-                    </DialogHeader>
-
-                    <form onSubmit={handleProductSubmit} className="space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="name">Product Name</Label>
-                          <Input
-                            id="name"
-                            value={productForm.name}
-                            onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
-                            required
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="category">Category</Label>
-                          <Select
-                            value={productForm.category}
-                            onValueChange={(value) => setProductForm({ ...productForm, category: value })}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {categories.map((category) => (
-                                <SelectItem key={category} value={category}>
-                                  {category}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-
-                      <div className="grid grid-cols-3 gap-4">
-                        <div>
-                          <Label htmlFor="unit">Unit</Label>
-                          <Select
-                            value={productForm.unit}
-                            onValueChange={(value) => setProductForm({ ...productForm, unit: value })}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {units.map((unit) => (
-                                <SelectItem key={unit} value={unit}>
-                                  {unit}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                        <div>
-                          <Label htmlFor="stockQuantity">Stock Quantity</Label>
-                          <Input
-                            id="stockQuantity"
-                            type="number"
-                            min="0"
-                            value={productForm.stockQuantity}
-                            onChange={(e) =>
-                              setProductForm({ ...productForm, stockQuantity: Number.parseInt(e.target.value) || 0 })
-                            }
-                            required
-                          />
-                        </div>
-                        <div>
-                          <Label htmlFor="pricePerUnit">Price per Unit (₹)</Label>
-                          <Input
-                            id="pricePerUnit"
-                            type="number"
-                            min="0"
-                            step="0.01"
-                            value={productForm.pricePerUnit}
-                            onChange={(e) =>
-                              setProductForm({ ...productForm, pricePerUnit: Number.parseFloat(e.target.value) || 0 })
-                            }
-                            required
-                          />
-                        </div>
-                      </div>
-
-                      <div>
-                        <Label htmlFor="expiryDate">Expiry Date</Label>
+              ) : isError ? (
+                <div className="flex items-center justify-center h-64 text-red-500">
+                  <AlertCircle className="h-8 w-8 mr-2" />
+                  <span className="text-lg">Failed to load products. Please try refreshing the page.</span>
+                </div>
+              ) : (
+                <>
+                  {/* Actions Bar */}
+                  <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
+                    <div className="flex flex-col sm:flex-row gap-4 flex-1">
+                      <div className="relative flex-1 max-w-sm">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                         <Input
-                          id="expiryDate"
-                          type="date"
-                          value={productForm.expiryDate}
-                          onChange={(e) => setProductForm({ ...productForm, expiryDate: e.target.value })}
+                          placeholder="Search products..."
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="pl-10"
                         />
                       </div>
+                      <Select value={filterCategory} onValueChange={setFilterCategory}>
+                        <SelectTrigger className="w-48">
+                          <Filter className="w-4 h-4 mr-2" />
+                          <SelectValue placeholder="Filter by category" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="all">All Categories</SelectItem>
+                          {categories.map((category) => (
+                            <SelectItem key={category} value={category}>
+                              {category}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
 
-                      <div>
-                        <Label htmlFor="description">Description</Label>
-                        <Textarea
-                          id="description"
-                          value={productForm.description}
-                          onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
-                          rows={3}
-                        />
-                      </div>
-
-                      <div className="flex items-center space-x-2">
-                        <Switch
-                          id="isAvailable"
-                          checked={productForm.isAvailable}
-                          onCheckedChange={(checked) => setProductForm({ ...productForm, isAvailable: checked })}
-                        />
-                        <Label htmlFor="isAvailable">Available for sale</Label>
-                      </div>
-
-                      <div className="flex justify-end space-x-2 pt-4">
-                        <Button type="button" variant="outline" onClick={resetProductForm}>
-                          Cancel
+                    <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button className="bg-gradient-to-r from-[#4B0082] to-[#8A2BE2] hover:from-[#5B1092] hover:to-[#9A3BF2]">
+                          <Plus className="w-4 h-4 mr-2" />
+                          Add Product
                         </Button>
-                        <Button type="submit" className="bg-gradient-to-r from-[#4B0082] to-[#8A2BE2]">
-                          <Save className="w-4 h-4 mr-2" />
-                          {editingProduct ? "Update Product" : "Add Product"}
-                        </Button>
-                      </div>
-                    </form>
-                  </DialogContent>
-                </Dialog>
-              </div>
+                      </DialogTrigger>
+                      <DialogContent className="max-w-2xl">
+                        <DialogHeader>
+                          <DialogTitle>{editingProduct ? "Edit Product" : "Add New Product"}</DialogTitle>
+                          <DialogDescription>
+                            {editingProduct ? "Update your product information" : "Add a new product to your inventory"}
+                          </DialogDescription>
+                        </DialogHeader>
 
-              {/* Products Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredProducts.map((product) => (
-                  <Card key={product._id} className="hover:shadow-lg transition-shadow">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <CardTitle className="text-lg">{product.name}</CardTitle>
-                          <CardDescription>{product.category}</CardDescription>
-                        </div>
-                        <Badge variant={product.isAvailable ? "default" : "secondary"}>
-                          {product.isAvailable ? "Available" : "Unavailable"}
-                        </Badge>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">Price:</span>
-                          <span className="font-medium">
-                            ₹{product.pricePerUnit}/{product.unit}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">Stock:</span>
-                          <span className="font-medium">
-                            {product.stockQuantity} {product.unit}
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center">
-                          <span className="text-sm text-gray-600">Total Value:</span>
-                          <span className="font-medium text-green-600">₹{product.totalPrice}</span>
-                        </div>
-                        {product.expiryDate && (
-                          <div className="flex justify-between items-center">
-                            <span className="text-sm text-gray-600">Expires:</span>
-                            <span className="text-sm">{new Date(product.expiryDate).toLocaleDateString()}</span>
+                        <form onSubmit={handleProductSubmit} className="space-y-4">
+                          <div className="grid grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor="name">Product Name</Label>
+                              <Input
+                                id="name"
+                                value={productForm.name}
+                                onChange={(e) => setProductForm({ ...productForm, name: e.target.value })}
+                                required
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="category">Category</Label>
+                              <Select
+                                value={productForm.category}
+                                onValueChange={(value) => setProductForm({ ...productForm, category: value })}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {categories.map((category) => (
+                                    <SelectItem key={category} value={category}>
+                                      {category}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
                           </div>
-                        )}
-                        {product.description && (
-                          <p className="text-sm text-gray-600 line-clamp-2">{product.description}</p>
-                        )}
 
-                        <div className="flex space-x-2 pt-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleEditProduct(product)}
-                            className="flex-1"
-                          >
-                            <Edit className="w-4 h-4 mr-1" />
-                            Edit
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={() => handleDeleteProduct(product._id)}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                          <div className="grid grid-cols-3 gap-4">
+                            <div>
+                              <Label htmlFor="unit">Unit</Label>
+                              <Select
+                                value={productForm.unit}
+                                onValueChange={(value) => setProductForm({ ...productForm, unit: value })}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {units.map((unit) => (
+                                    <SelectItem key={unit} value={unit}>
+                                      {unit}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            </div>
+                            <div>
+                              <Label htmlFor="stockQuantity">Stock Quantity</Label>
+                              <Input
+                                id="stockQuantity"
+                                type="number"
+                                min="0"
+                                value={productForm.stockQuantity}
+                                onChange={(e) =>
+                                  setProductForm({ ...productForm, stockQuantity: Number.parseInt(e.target.value) || 0 })
+                                }
+                                required
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="pricePerUnit">Price per Unit (₹)</Label>
+                              <Input
+                                id="pricePerUnit"
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                value={productForm.pricePerUnit}
+                                onChange={(e) =>
+                                  setProductForm({ ...productForm, pricePerUnit: Number.parseFloat(e.target.value) || 0 })
+                                }
+                                required
+                              />
+                            </div>
+                          </div>
 
-              {filteredProducts.length === 0 && (
-                <div className="text-center py-12">
-                  <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
-                  <p className="text-gray-600 mb-4">
-                    {searchTerm || filterCategory !== "all"
-                      ? "Try adjusting your search or filter criteria"
-                      : "Get started by adding your first product"}
-                  </p>
-                  <Button
-                    onClick={() => setIsProductDialogOpen(true)}
-                    className="bg-gradient-to-r from-[#4B0082] to-[#8A2BE2]"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add Product
-                  </Button>
-                </div>
+                          <div>
+                            <Label htmlFor="expiryDate">Expiry Date</Label>
+                            <Input
+                              id="expiryDate"
+                              type="date"
+                              value={productForm.expiryDate}
+                              onChange={(e) => setProductForm({ ...productForm, expiryDate: e.target.value })}
+                            />
+                          </div>
+
+                          <div>
+                            <Label htmlFor="description">Description</Label>
+                            <Textarea
+                              id="description"
+                              value={productForm.description}
+                              onChange={(e) => setProductForm({ ...productForm, description: e.target.value })}
+                              rows={3}
+                            />
+                          </div>
+
+                          <div className="flex items-center space-x-2">
+                            <Switch
+                              id="isAvailable"
+                              checked={productForm.isAvailable}
+                              onCheckedChange={(checked) => setProductForm({ ...productForm, isAvailable: checked })}
+                            />
+                            <Label htmlFor="isAvailable">Available for sale</Label>
+                          </div>
+
+                          <div className="flex justify-end space-x-2 pt-4">
+                            <Button type="button" variant="outline" onClick={resetProductForm}>
+                              Cancel
+                            </Button>
+                            <Button type="submit" className="bg-gradient-to-r from-[#4B0082] to-[#8A2BE2]">
+                              <Save className="w-4 h-4 mr-2" />
+                              {editingProduct ? "Update Product" : "Add Product"}
+                            </Button>
+                          </div>
+                        </form>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+
+                  {/* Products Grid */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredProducts.map((product) => (
+                      <Card key={product._id} className="hover:shadow-lg transition-shadow">
+                        <CardHeader className="pb-3">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <CardTitle className="text-lg">{product.name}</CardTitle>
+                              <CardDescription>{product.category}</CardDescription>
+                            </div>
+                            <Badge variant={product.isAvailable ? "default" : "secondary"}>
+                              {product.isAvailable ? "Available" : "Unavailable"}
+                            </Badge>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-3">
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-gray-600">Price:</span>
+                              <span className="font-medium">
+                                ₹{product.pricePerUnit}/{product.unit}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-gray-600">Stock:</span>
+                              <span className="font-medium">
+                                {product.stockQuantity} {product.unit}
+                              </span>
+                            </div>
+                            <div className="flex justify-between items-center">
+                              <span className="text-sm text-gray-600">Total Value:</span>
+                              <span className="font-medium text-green-600">₹{product.stockQuantity * product.pricePerUnit}</span>
+                            </div>
+                            {product.expiryDate && (
+                              <div className="flex justify-between items-center">
+                                <span className="text-sm text-gray-600">Expires:</span>
+                                <span className="text-sm">{new Date(product.expiryDate).toLocaleDateString()}</span>
+                              </div>
+                            )}
+                            {product.description && (
+                              <p className="text-sm text-gray-600 line-clamp-2">{product.description}</p>
+                            )}
+
+                            <div className="flex space-x-2 pt-2">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleEditProduct(product)}
+                                className="flex-1"
+                              >
+                                <Edit className="w-4 h-4 mr-1" />
+                                Edit
+                              </Button>
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleDeleteProduct(product._id)}
+                                className="text-red-600 hover:text-red-700 hover:bg-red-50"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                  </div>
+
+                  {filteredProducts.length === 0 && (
+                    <div className="text-center py-12">
+                      <Package className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No products found</h3>
+                      <p className="text-gray-600 mb-4">
+                        {searchTerm || filterCategory !== "all"
+                          ? "Try adjusting your search or filter criteria"
+                          : "Get started by adding your first product"}
+                      </p>
+                      <Button
+                        onClick={() => setIsProductDialogOpen(true)}
+                        className="bg-gradient-to-r from-[#4B0082] to-[#8A2BE2]"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Product
+                      </Button>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}
@@ -590,24 +656,24 @@ export default function VendorDashboard() {
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                           <Label htmlFor="vendorName">Full Name</Label>
-                          <Input id="vendorName" value={vendor.name} readOnly />
+                          <Input id="vendorName" value={user.name} readOnly />
                         </div>
                         <div>
                           <Label htmlFor="businessName">Business Name</Label>
-                          <Input id="businessName" value={vendor.businessName} />
+                          <Input id="businessName" value={user.businessName} />
                         </div>
                         <div>
                           <Label htmlFor="email">Email Address</Label>
                           <div className="relative">
                             <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                            <Input id="email" value={vendor.email} className="pl-10" readOnly />
+                            <Input id="email" value={user.email} className="pl-10" readOnly />
                           </div>
                         </div>
                         <div>
                           <Label htmlFor="phone">Phone Number</Label>
                           <div className="relative">
                             <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                            <Input id="phone" value={vendor.phone} className="pl-10" />
+                            <Input id="phone" value={user.phone} className="pl-10" />
                           </div>
                         </div>
                       </div>
@@ -626,30 +692,30 @@ export default function VendorDashboard() {
                           <Label htmlFor="street">Street Address</Label>
                           <div className="relative">
                             <MapPin className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                            <Input id="street" value={vendor.address.street} className="pl-10" />
+                            <Input id="street" value={user.address.street} className="pl-10" />
                           </div>
                         </div>
                         <div>
                           <Label htmlFor="city">City</Label>
-                          <Input id="city" value={vendor.address.city} />
+                          <Input id="city" value={user.address.city} />
                         </div>
                         <div>
                           <Label htmlFor="state">State</Label>
-                          <Input id="state" value={vendor.address.state} />
+                          <Input id="state" value={user.address.state} />
                         </div>
                         <div>
                           <Label htmlFor="zipCode">ZIP Code</Label>
-                          <Input id="zipCode" value={vendor.address.zipCode} />
+                          <Input id="zipCode" value={user.address.zipCode} />
                         </div>
                         <div>
                           <Label htmlFor="country">Country</Label>
-                          <Input id="country" value={vendor.address.country} />
+                          <Input id="country" value={user.address.country} />
                         </div>
                         <div>
                           <Label htmlFor="coordinates">Coordinates</Label>
                           <Input
                             id="coordinates"
-                            value={`${vendor.location.coordinates[1]}, ${vendor.location.coordinates[0]}`}
+                            value={`${user.location.lat}, ${user.location.lng}`}
                             placeholder="Latitude, Longitude"
                           />
                         </div>
@@ -720,7 +786,7 @@ export default function VendorDashboard() {
                     onClick={LogoutUser}
                     className="w-full justify-start text-red-600 hover:text-red-700 bg-transparent"
                   >
-                    LogOut From this Account
+                    Logout Now
                   </Button>
                   <Button
                     variant="outline"

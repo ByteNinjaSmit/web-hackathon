@@ -1,21 +1,29 @@
 import axios from 'axios';
 
 // API base URL from environment variables
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const API_BASE_URL = import.meta.env.VITE_APP_URI_API;
 
 // Create axios instance with default config
-const apiClient = axios.create({
-  baseURL: API_BASE_URL,
-  timeout: 10000,
-  headers: {
-    'Content-Type': 'application/json',
-  },
-});
+const createApiClient = (authToken = null) => {
+  return axios.create({
+    baseURL: API_BASE_URL,
+    timeout: 10000,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(authToken ? { Authorization: authToken } : {}),
+    },
+    withCredentials: true, // Important for sending cookies with requests
+  });
+};
+
+// Default client without auth token
+const defaultApiClient = createApiClient();
 
 // Helper function for API requests
-const apiRequest = async (endpoint, options = {}) => {
+const apiRequest = async (endpoint, options = {}, authToken = null) => {
   try {
-    const response = await apiClient({
+    const client = authToken ? createApiClient(authToken) : defaultApiClient;
+    const response = await client({
       url: endpoint,
       ...options,
     });
@@ -29,7 +37,7 @@ const apiRequest = async (endpoint, options = {}) => {
 // Vendor API functions
 export const vendorApi = {
   // Get nearby vendors
-  getNearbyVendors: async (params) => {
+  getNearbyVendors: async (params, authToken = null) => {
     const { latitude, longitude, maxDistance = 10, includeProducts = false } = params;
     return apiRequest('/api/vendors/nearby', {
       method: 'GET',
@@ -39,11 +47,11 @@ export const vendorApi = {
         maxDistance,
         includeProducts,
       },
-    });
+    }, authToken);
   },
 
   // Get vendors with products
-  getVendorsWithProducts: async (params) => {
+  getVendorsWithProducts: async (params, authToken = null) => {
     const { latitude, longitude, maxDistance = 10, category, search } = params;
     return apiRequest('/api/vendors/with-products', {
       method: 'GET',
@@ -54,11 +62,11 @@ export const vendorApi = {
         category,
         search,
       },
-    });
+    }, authToken);
   },
 
   // Get all vendors (for admin purposes)
-  getAllVendors: async (params = {}) => {
+  getAllVendors: async (params = {}, authToken = null) => {
     const { search, isVerified, page = 1, limit = 20 } = params;
     return apiRequest('/api/vendors', {
       method: 'GET',
@@ -68,14 +76,14 @@ export const vendorApi = {
         page,
         limit,
       },
-    });
+    }, authToken);
   },
 };
 
 // Product API functions
 export const productApi = {
   // Get products with location filtering
-  getProducts: async (params = {}) => {
+  getProducts: async (params = {}, authToken = null) => {
     const { latitude, longitude, maxDistance, category, search, page = 1, limit = 20 } = params;
     return apiRequest('/api/products', {
       method: 'GET',
@@ -88,11 +96,11 @@ export const productApi = {
         page,
         limit,
       },
-    });
+    }, authToken);
   },
 
   // Get products by specific vendor
-  getProductsByVendor: async (vendorId, params = {}) => {
+  getProductsByVendor: async (vendorId, params = {}, authToken = null) => {
     const { page = 1, limit = 20 } = params;
     return apiRequest(`/api/products/vendor/${vendorId}`, {
       method: 'GET',
@@ -100,14 +108,14 @@ export const productApi = {
         page,
         limit,
       },
-    });
+    }, authToken);
   },
 };
 
 // High-level search functions
 export const locationSearch = {
   // Search for products nearby
-  searchProductsNearby: async (params) => {
+  searchProductsNearby: async (params, authToken = null) => {
     const { latitude, longitude, maxDistance = 10, category, search } = params;
     return productApi.getProducts({
       latitude,
@@ -115,11 +123,11 @@ export const locationSearch = {
       maxDistance,
       category,
       search,
-    });
+    }, authToken);
   },
 
   // Search for vendors nearby
-  searchVendorsNearby: async (params) => {
+  searchVendorsNearby: async (params, authToken = null) => {
     const { latitude, longitude, maxDistance = 10, category, search } = params;
     return vendorApi.getVendorsWithProducts({
       latitude,
@@ -127,11 +135,11 @@ export const locationSearch = {
       maxDistance,
       category,
       search,
-    });
+    }, authToken);
   },
 
   // Get vendors with products nearby
-  getVendorsWithProductsNearby: async (params) => {
+  getVendorsWithProductsNearby: async (params, authToken = null) => {
     const { latitude, longitude, maxDistance = 10, category, search } = params;
     return vendorApi.getVendorsWithProducts({
       latitude,
@@ -139,18 +147,18 @@ export const locationSearch = {
       maxDistance,
       category,
       search,
-    });
+    }, authToken);
   },
 
   // Get all nearby vendors (without products)
-  getAllNearbyVendors: async (params) => {
+  getAllNearbyVendors: async (params, authToken = null) => {
     const { latitude, longitude, maxDistance = 10, includeProducts = false } = params;
     return vendorApi.getNearbyVendors({
       latitude,
       longitude,
       maxDistance,
       includeProducts,
-    });
+    }, authToken);
   },
 };
 
@@ -223,4 +231,5 @@ export default {
   locationSearch,
   locationUtils,
   apiRequest,
-}; 
+  createApiClient,
+};
