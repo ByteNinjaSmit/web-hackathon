@@ -72,10 +72,14 @@ const vendorSchema = new mongoose.Schema({
     type: Boolean,
     default: true,
   },
-  isVerified:{
+  isVerified: {
     type: Boolean,
-    default: false
-  }
+    default: false,
+  },
+  isRejected: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 // Add 2dsphere index for geospatial queries
@@ -114,11 +118,10 @@ vendorSchema.virtual("isProfileComplete").get(function () {
     this.address &&
     this.address.street &&
     this.location &&
-    typeof this.location.lat === 'number' &&
-    typeof this.location.lng === 'number'
+    typeof this.location.lat === "number" &&
+    typeof this.location.lng === "number"
   );
 });
-
 
 // json web token
 vendorSchema.methods.generateToken = async function () {

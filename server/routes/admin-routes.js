@@ -14,5 +14,6 @@ router.get("/verified-vendors", adminController.getverifiedVendors);
 router.get("/rejected-vendors", adminController.getRejectedVendors);
 
 router.post("/register", adminController.registerAdmin);;
+router.post("/remove-supplier", adminController.removeVendor);;
 
 module.exports = router;

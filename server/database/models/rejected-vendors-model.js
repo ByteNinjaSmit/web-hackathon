@@ -22,9 +22,6 @@ const rejectVendor = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: function () {
-        return !this.isGoogleAccount;
-      },
     },
     isGoogleAccount: {
       type: Boolean,

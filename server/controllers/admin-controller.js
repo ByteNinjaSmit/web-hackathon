@@ -4,7 +4,9 @@ const Admin = require("../database/models/admin-model");
 
 const getUnverifiedVendors = async (req, res) => {
   try {
-    const vendors = await Vendor.find({ isVerified: false }).select("-password");
+    const vendors = await Vendor.find({ isVerified: false }).select(
+      "-password"
+    );
     res.status(200).json({ success: true, vendors });
   } catch (error) {
     res.status(500).json({ success: false, message: "Server error." });
@@ -70,8 +72,10 @@ const rejectVendor = async (req, res) => {
       rejectDate: new Date(),
     });
 
+    vendor.isRejected = true;
+
     await rejectedVendor.save();
-    // await vendor.deleteOne();
+    await vendor.save();
 
     res
       .status(200)
@@ -82,13 +86,14 @@ const rejectVendor = async (req, res) => {
   }
 };
 
-
 const registerAdmin = async (req, res) => {
   try {
     const { email, password } = req.body;
 
     if (!email || !password)
-      return res.status(400).json({ message: "Email and password are required." });
+      return res
+        .status(400)
+        .json({ message: "Email and password are required." });
 
     const existingAdmin = await Admin.findOne({ email });
     if (existingAdmin)
@@ -103,15 +108,45 @@ const registerAdmin = async (req, res) => {
     res.status(500).json({ message: "Internal server error" });
   }
 };
+const removeVendor = async (req, res) => {
+  try {
+    const { supplierId } = req.body;
 
+    if (!supplierId) {
+      return res.status(400).json({
+        success: false,
+        message: "Supplier ID is required.",
+      });
+    }
+    const deletedVendor = await Vendor.findByIdAndDelete(supplierId);
 
+    if (!deletedVendor) {
+      return res.status(404).json({
+        success: false,
+        message: "Vendor not found.",
+      });
+    }
 
-module.exports = { getUnverifiedVendors, approveVendor, rejectVendor, registerAdmin  };
+    res.status(200).json({
+      success: true,
+      message: "Vendor deleted successfully.",
+      data: deletedVendor, 
+    });
+  } catch (error) {
+    console.error("Error removing vendor:", error);
+    res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
+  }
+};
+
 module.exports = {
   getUnverifiedVendors,
   approveVendor,
+  removeVendor,
   rejectVendor,
   getverifiedVendors,
   getRejectedVendors,
-  registerAdmin
+  registerAdmin,
 };
