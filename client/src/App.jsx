@@ -54,7 +54,8 @@ const App = () => {
           <Route path="/inventory" element={<InventoryTracker />} />
           <Route path="/profile" element={<ProfileManagement />} />
           <Route path="/location-search" element={<LocationBasedSearch />} />
-          <Route path="/admin" element={<AdminLayout />}>
+
+          <Route path="/admin" element={<SidebarMenuItem />}>
             <Route index element={<VendorDashboardPage />} />
             <Route path="pending-verifications" element={<PendingVerifications />} />
             <Route path="approved-suppliers" element={<ApprovedSuppliers />} />
