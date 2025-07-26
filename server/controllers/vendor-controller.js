@@ -257,8 +257,89 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   return Math.round(distance * 1000); // Return in meters
 }
 
+// Get product statistics for a vendor
+const getProductStats = async (req, res, next) => {
+  try {
+    const vendorId = req.user?._id;
+    
+    if (!vendorId) {
+      return res.status(401).json({ 
+        success: false, 
+        message: "Vendor not authenticated" 
+      });
+    }
+
+    // Get all non-deleted products for this vendor
+    const products = await Product.find({
+      supplierId: vendorId,
+      isDeleted: { $ne: true }
+    }).lean();
+
+    // Calculate statistics
+    const totalProducts = products.length;
+    const availableProducts = products.filter(p => p.isAvailable).length;
+    
+    // Calculate total inventory value
+    const totalValue = products.reduce((sum, product) => {
+      return sum + (product.stockQuantity * product.pricePerUnit);
+    }, 0);
+
+    // Get product categories distribution
+    const categoryCounts = {};
+    products.forEach(product => {
+      const category = product.category || 'Uncategorized';
+      categoryCounts[category] = (categoryCounts[category] || 0) + 1;
+    });
+
+    // Get recent products (last 5)
+    const recentProducts = products
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      .slice(0, 5);
+
+    res.json({
+      success: true,
+      stats: {
+        totalProducts,
+        availableProducts,
+        totalValue,
+        categoryCounts,
+        recentProducts
+      }
+    });
+
+  } catch (error) {
+    next(error);
+  }
+};
+
+// --------------------------------------
+// Get Vendor Own Products
+// -------------------------------------
+
+
+
+const getOwnProducts = async(req,res,next)=>{
+  try {
+
+    const supplierId= req.user?._id;
+
+
+
+    const products = await Product.find({supplierId:supplierId});
+    return res.status(200).json({
+      success: true,
+      products,
+    })
+
+  } catch (error) {
+    next(error)
+  }
+}
+
 module.exports = {
   getNearbyVendors,
   getVendorsWithProducts,
-  getAllVendors
-}; 
+  getAllVendors,
+  getProductStats,
+  getOwnProducts
+};

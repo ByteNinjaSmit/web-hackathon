@@ -139,6 +139,7 @@ export function useLocationQuery() {
       requireLocation = true,
       maxDistance = 10000,
       fallbackToGlobal = false,
+      authToken = null,
       ...queryParams
     } = options;
 
@@ -162,7 +163,7 @@ export function useLocationQuery() {
       params.append('maxDistance', maxDistance);
     }
 
-    return queryFn(params.toString());
+    return queryFn(params.toString(), authToken);
   }, [location, requestLocation, isLocationAvailable]);
 
   return {
@@ -170,4 +171,4 @@ export function useLocationQuery() {
     location,
     isLocationAvailable
   };
-} 
+}

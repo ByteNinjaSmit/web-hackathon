@@ -176,9 +176,11 @@ export default function EnhancedApprovedSuppliers() {
     setProcessingIds((prev) => new Set([...prev, supplierId]))
 
     try {
+      const reason = "This supplier has violated our terms of service and will be permanently banned.";
       const response = await axios.post(`${API}/api/admin/reject`, {
         supplierId,
-      })
+        reason,
+      });
 
       const data = response.data
       if (!data.success) {

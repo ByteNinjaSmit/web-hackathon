@@ -11,7 +11,7 @@ import { MapPin, Search, Package, Store, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const LocationBasedSearch = () => {
-  const { isLoggedIn, user } = useAuth();
+  const { isLoggedIn, user, authorizationToken } = useAuth();
   const { location, loading: locationLoading, error: locationError, requestLocation } = useLocation();
   
   const [searchType, setSearchType] = useState('vendors');
@@ -47,7 +47,7 @@ const LocationBasedSearch = () => {
           maxDistance,
           search: search || undefined,
           category: category !== 'all' ? category : undefined
-        });
+        }, isLoggedIn ? authorizationToken : null);
         setResults(data.vendors || []);
       } else {
         data = await locationSearch.searchProductsNearby({
@@ -56,7 +56,7 @@ const LocationBasedSearch = () => {
           maxDistance,
           search: search || undefined,
           category: category !== 'all' ? category : undefined
-        });
+        }, isLoggedIn ? authorizationToken : null);
         setResults(data.products || []);
       }
       
@@ -277,4 +277,4 @@ const LocationBasedSearch = () => {
   );
 };
 
-export default LocationBasedSearch; 
+export default LocationBasedSearch;

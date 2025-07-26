@@ -58,20 +58,22 @@ const approveVendor = async (req, res) => {
 const rejectVendor = async (req, res) => {
   try {
     const { supplierId, reason = "No reason provided" } = req.body;
-
     const vendor = await Vendor.findById(supplierId);
     if (!vendor) {
+      console.error("Vendor not found:", supplierId);
       return res
         .status(404)
         .json({ success: false, message: "Vendor not found." });
     }
 
+    const vendorData = vendor.toObject();
+    delete vendorData._id;
+
     const rejectedVendor = new RVendor({
-      ...vendor.toObject(),
+      ...vendorData,
       rejectionReason: reason,
       rejectDate: new Date(),
     });
-
     vendor.isRejected = true;
 
     await rejectedVendor.save();
@@ -130,7 +132,7 @@ const removeVendor = async (req, res) => {
     res.status(200).json({
       success: true,
       message: "Vendor deleted successfully.",
-      data: deletedVendor, 
+      data: deletedVendor,
     });
   } catch (error) {
     console.error("Error removing vendor:", error);
