@@ -43,7 +43,7 @@ export function VendorLoginForm() {
                 if (response.status === 200) {
                     toast.success("Google registration successful!");
                     // console.log(`Data: `, response.data)
-                    // storeTokenInCookies(response.data.token);
+                    storeTokenInCookies(response.data.token);
                     if (data.isProfileComplete) {
                         navigate("/vendordashboard");
                     } else {
