@@ -30,16 +30,48 @@ const vendorSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
-    //   Add Address  related Fields
-    address: {
-      street: String,
-      city: String,
-      state: String,
-      zipCode: String,
+  businessName: {
+    type: String,
+    required: function () {
+      return !this.isGoogleAccount;
+    },
   },
-
-
+  // Updated location field to use GeoJSON format
+  location: {
+    type: {
+      type: String,
+      enum: ['Point'],
+      default: 'Point'
+    },
+    coordinates: {
+      type: [Number], // [longitude, latitude]
+      required: true,
+      validate: {
+        validator: function(v) {
+          return v.length === 2 && 
+                 v[0] >= -180 && v[0] <= 180 && // longitude
+                 v[1] >= -90 && v[1] <= 90;     // latitude
+        },
+        message: 'Coordinates must be [longitude, latitude] with valid ranges'
+      }
+    }
+  },
+  //   Add Address  related Fields
+  address: {
+    street: String,
+    city: String,
+    state: String,
+    zipCode: String,
+    country: String,
+  },
+  isVendor:{
+    type:Boolean,
+    default:true,
+  }
 });
+
+// Add 2dsphere index for geospatial queries
+vendorSchema.index({ location: "2dsphere" });
 
 // secure the password
 
@@ -85,6 +117,10 @@ vendorSchema.methods.generateToken = async function () {
     console.error(error);
   }
 };
+
+vendorSchema.virtual('isProfileComplete').get(function () {
+  return !!(this.phone && this.businessName && this.address && this.address.street && this.location && this.location.coordinates && this.location.coordinates.length === 2);
+});
 
 const Vendor = new mongoose.model("Vendors", vendorSchema);
 module.exports = Vendor;
