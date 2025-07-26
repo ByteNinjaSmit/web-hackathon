@@ -4,7 +4,7 @@ const Admin = require("../database/models/admin-model");
 
 const getUnverifiedVendors = async (req, res) => {
   try {
-    const vendors = await Vendor.find({ isVendor: false }).select("-password");
+    const vendors = await Vendor.find({ isVerified: false }).select("-password");
     res.status(200).json({ success: true, vendors });
   } catch (error) {
     res.status(500).json({ success: false, message: "Server error." });
@@ -13,7 +13,7 @@ const getUnverifiedVendors = async (req, res) => {
 
 const getverifiedVendors = async (req, res) => {
   try {
-    const vendors = await Vendor.find({ isVendor: true }).select("-password");
+    const vendors = await Vendor.find({ isVerified: true }).select("-password");
     res.status(200).json({ success: true, vendors });
   } catch (error) {
     res.status(500).json({ success: false, message: "Server error." });
@@ -42,7 +42,7 @@ const approveVendor = async (req, res) => {
         .status(404)
         .json({ success: false, message: "Vendor not found." });
     }
-    vendor.isVendor = true;
+    vendor.isVerified = true;
     await vendor.save();
     res
       .status(200)
@@ -71,7 +71,7 @@ const rejectVendor = async (req, res) => {
     });
 
     await rejectedVendor.save();
-    await vendor.deleteOne();
+    // await vendor.deleteOne();
 
     res
       .status(200)

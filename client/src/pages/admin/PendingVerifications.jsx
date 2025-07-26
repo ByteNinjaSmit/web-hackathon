@@ -61,7 +61,7 @@ export default function PendingVerifications() {
           email: vendor.email,
           phone: vendor.phone,
           submittedDate: vendor?.createdAt?.split("T")[0],
-          status: vendor?.isVendor ? "approved" : "pending",
+          status: vendor?.isVerified ? "approved" : "pending",
           fssaiNumber: vendor?.fssaiNumber,
           gstNumber: vendor?.gstNumber,
           businessLicense: vendor?.businessLicense,

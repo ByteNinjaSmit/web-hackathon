@@ -57,7 +57,7 @@ const sidebarMenuItems = [
         icon: Clock,
         href: "/admin/pending-verifications",
         type: "single",
-        badge: 12,
+        // badge: 3,
       },
       {
         title: "Approved Suppliers",
