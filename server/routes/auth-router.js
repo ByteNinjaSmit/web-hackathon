@@ -14,7 +14,7 @@ router.post("/google-login-vendor", authController.googleLoginVendor);
 router.post("/vendor/login", authController.loginVendor);
 router.post("/vendor/register", authController.registerVendor);
 
-
+router.post("/admin/login", authController.loginAdmin);
 router.get("/current-user",authController.getCurrentUser)
 
 module.exports = router;
