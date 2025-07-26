@@ -584,6 +584,66 @@ const updateUserProfile = async (req, res, next) => {
   }
 };
 
+
+// =============================
+// Update Vendor Profile (for Google signups)
+// =============================
+const updateVendorProfile = async (req, res, next) => {
+  try {
+    // Get vendor ID from the authenticated request (assume req.user is set by auth middleware)
+    const vendorId = req.user?._id;
+    if (!vendorId) {
+      return res.status(401).json({ message: "Vendor not authenticated" });
+    }
+    // Find the vendor
+    const vendor = await Vendor.findById(vendorId);
+    if (!vendor) {
+      return res.status(404).json({ message: "Vendor not found" });
+    }
+    // Only allow updating fields relevant for profile completion
+    const {
+      phone,
+      businessName,
+      address,
+      location,
+      fssaiNumber,
+      gstNumber,
+      businessLicense,
+    } = req.body;
+    if (phone !== undefined) vendor.phone = phone;
+    if (businessName !== undefined) vendor.businessName = businessName;
+    if (address !== undefined) vendor.address = address;
+    if (location !== undefined) vendor.location = location;
+    if (fssaiNumber !== undefined) vendor.fssaiNumber = fssaiNumber;
+    if (gstNumber !== undefined) vendor.gstNumber = gstNumber;
+    if (businessLicense !== undefined) vendor.businessLicense = businessLicense;
+    await vendor.save();
+    res.status(200).json({
+      message: "Vendor profile updated successfully",
+      vendor: {
+        _id: vendor._id,
+        name: vendor.name,
+        email: vendor.email,
+        phone: vendor.phone,
+        businessName: vendor.businessName,
+        address: vendor.address,
+        location: vendor.location,
+        fssaiNumber: vendor.fssaiNumber,
+        gstNumber: vendor.gstNumber,
+        businessLicense: vendor.businessLicense,
+        isGoogleAccount: vendor.isGoogleAccount,
+        isProfileComplete: checkVendorProfileComplete(vendor),
+        createdAt: vendor.createdAt,
+        updatedAt: vendor.updatedAt
+      }
+    });
+  } catch (error) {
+    logger.error("Update vendor profile error", error);
+    next(error);
+  }
+};
+
+
 module.exports = {
   googleLogin,
   login,
@@ -594,5 +654,7 @@ module.exports = {
   registerVendor,
   loginVendor,
   loginAdmin,
-  updateUserProfile
+  updateUserProfile,
+  updateVendorProfile,
+  
 };
