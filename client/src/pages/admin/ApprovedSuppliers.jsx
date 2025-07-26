@@ -466,39 +466,35 @@ export default function EnhancedApprovedSuppliers() {
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                   <div className="grid grid-cols-1 gap-3">
-                                    <div className="flex flex-col sm:flex-row sm:justify-between p-3 bg-white rounded-lg">
-                                      <strong className="text-[#8A2BE2]">Company Name:</strong>
-                                      <span className="sm:text-right font-medium">{selectedSupplier.companyName}</span>
+                                    <div className="p-3 bg-white rounded-lg">
+                                      <strong className="text-[#8A2BE2] block">Company Name</strong>
+                                      <span className="font-medium">{selectedSupplier.companyName}</span>
+                                    </div>
+                                    <div className="p-3 bg-white rounded-lg">
+                                      <strong className="text-[#8A2BE2] block">Contact Person</strong>
+                                      <span className="font-medium">{selectedSupplier.contactPerson}</span>
+                                    </div>
+                                    <div className="p-3 bg-white rounded-lg">
+                                      <strong className="text-[#8A2BE2] block">Email</strong>
+                                      <span className="break-all font-medium">{selectedSupplier.email}</span>
+                                    </div>
+                                    <div className="p-3 bg-white rounded-lg">
+                                      <strong className="text-[#8A2BE2] block">Phone</strong>
+                                      <span className="font-medium">{selectedSupplier.phone}</span>
                                     </div>
                                     <div className="flex flex-col sm:flex-row sm:justify-between p-3 bg-white rounded-lg">
-                                      <strong className="text-[#8A2BE2]">Contact Person:</strong>
-                                      <span className="sm:text-right font-medium">
-                                        {selectedSupplier.contactPerson}
-                                      </span>
-                                    </div>
-                                    <div className="flex flex-col sm:flex-row sm:justify-between p-3 bg-white rounded-lg">
-                                      <strong className="text-[#8A2BE2]">Email:</strong>
-                                      <span className="sm:text-right break-all font-medium">
-                                        {selectedSupplier.email}
-                                      </span>
-                                    </div>
-                                    <div className="flex flex-col sm:flex-row sm:justify-between p-3 bg-white rounded-lg">
-                                      <strong className="text-[#8A2BE2]">Phone:</strong>
-                                      <span className="sm:text-right font-medium">{selectedSupplier.phone}</span>
-                                    </div>
-                                    <div className="flex flex-col sm:flex-row sm:justify-between p-3 bg-white rounded-lg">
-                                      <strong className="text-[#8A2BE2]">Approved:</strong>
+                                      <strong className="text-[#8A2BE2]">Approved</strong>
                                       <span className="sm:text-right font-medium">{selectedSupplier.approvedDate}</span>
                                     </div>
                                     <div className="flex flex-col sm:flex-row sm:justify-between p-3 bg-white rounded-lg">
-                                      <strong className="text-[#8A2BE2]">Rating:</strong>
+                                      <strong className="text-[#8A2BE2]">Rating</strong>
                                       <span className="sm:text-right font-medium flex items-center">
                                         <Star className="h-4 w-4 text-yellow-500 mr-1" />
                                         {selectedSupplier.rating}/5
                                       </span>
                                     </div>
                                     <div className="flex flex-col sm:flex-row sm:justify-between p-3 bg-white rounded-lg">
-                                      <strong className="text-[#8A2BE2]">Total Orders:</strong>
+                                      <strong className="text-[#8A2BE2]">Total Orders</strong>
                                       <span className="sm:text-right font-medium">{selectedSupplier.totalOrders}</span>
                                     </div>
                                   </div>
@@ -514,33 +510,26 @@ export default function EnhancedApprovedSuppliers() {
                                 </CardHeader>
                                 <CardContent className="space-y-4">
                                   <div className="grid grid-cols-1 gap-3">
-                                    <div className="flex flex-col sm:flex-row sm:justify-between p-3 bg-white rounded-lg">
-                                      <strong className="text-[#8A2BE2]">FSSAI Number:</strong>
-                                      <span className="sm:text-right break-all font-medium">
-                                        {selectedSupplier.fssaiNumber}
-                                      </span>
+                                    <div className="p-3 bg-white rounded-lg">
+                                      <strong className="text-[#8A2BE2] block">FSSAI Number</strong>
+                                      <span className="break-all font-medium">{selectedSupplier.fssaiNumber}</span>
                                     </div>
-                                    <div className="flex flex-col sm:flex-row sm:justify-between p-3 bg-white rounded-lg">
-                                      <strong className="text-[#8A2BE2]">GST Number:</strong>
-                                      <span className="sm:text-right break-all font-medium">
-                                        {selectedSupplier.gstNumber}
-                                      </span>
+                                    <div className="p-3 bg-white rounded-lg">
+                                      <strong className="text-[#8A2BE2] block">GST Number</strong>
+                                      <span className="break-all font-medium">{selectedSupplier.gstNumber}</span>
                                     </div>
-                                    <div className="flex flex-col sm:flex-row sm:justify-between p-3 bg-white rounded-lg">
-                                      <strong className="text-[#8A2BE2]">Business License:</strong>
-                                      <span className="sm:text-right break-all font-medium">
-                                        {selectedSupplier.businessLicense}
-                                      </span>
+                                    <div className="p-3 bg-white rounded-lg">
+                                      <strong className="text-[#8A2BE2] block">Business License</strong>
+                                      <span className="break-all font-medium">{selectedSupplier.businessLicense}</span>
                                     </div>
-                                    <div className="flex flex-col sm:flex-row sm:justify-between p-3 bg-white rounded-lg">
-                                      <strong className="text-[#8A2BE2]">License Expiry:</strong>
-                                      <span className="sm:text-right font-medium">
-                                        {selectedSupplier?.licenseExpiry}
-                                      </span>
+                                    <div className="p-3 bg-white rounded-lg">
+                                      <strong className="text-[#8A2BE2] block">License Expiry</strong>
+                                      <span className="font-medium">{selectedSupplier?.licenseExpiry}</span>
                                     </div>
                                   </div>
                                 </CardContent>
                               </Card>
+
                             </div>
 
                             {/* Products and Locations */}
@@ -597,7 +586,7 @@ export default function EnhancedApprovedSuppliers() {
                                 </CardTitle>
                               </CardHeader>
                               <CardContent>
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                   <Button
                                     variant="outline"
                                     className="justify-start bg-white border-purple-200 hover:bg-purple-50"

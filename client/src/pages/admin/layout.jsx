@@ -96,12 +96,12 @@ const sidebarMenuItems = [
         href: "/admin/users",
         type: "single",
       },
-      {
-        title: "Activity Log",
-        icon: Activity,
-        href: "/admin/activity-log",
-        type: "single",
-      },
+      // {
+      //   title: "Activity Log",
+      //   icon: Activity,
+      //   href: "/admin/activity-log",
+      //   type: "single",
+      // },
       {
         title: "My Profile",
         icon: User,
@@ -119,9 +119,9 @@ const sidebarMenuItems = [
         icon: BarChart3,
         type: "expandable",
         items: [
-          { title: "Performance Metrics", href: "/admin/analytics/performance" },
-          { title: "Supplier Analytics", href: "/admin/analytics/suppliers" },
-          { title: "Revenue Reports", href: "/admin/analytics/revenue" },
+          { title: "Performance Metrics" /*, href: "/admin/analytics/performance" */ },
+          { title: "Supplier Analytics" /*, href: "/admin/analytics/suppliers"*/ },
+          { title: "Revenue Reports" /* href: "/admin/analytics/revenue"*/},
         ],
       },
       {
@@ -344,14 +344,16 @@ export default function AdminLayout({ children }) {
                         <span>Profile</span>
                       </DropdownMenuItem>
                     </Link>
-                    <DropdownMenuItem className="cursor-pointer p-3 rounded-xl mx-2 my-1 hover:bg-purple-50 focus:bg-purple-50">
+
+                    {/* <DropdownMenuItem className="cursor-pointer p-3 rounded-xl mx-2 my-1 hover:bg-purple-50 focus:bg-purple-50">
                       <Settings className="mr-2 h-4 w-4 text-[#8A2BE2]" />
                       <span>Settings</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem className="cursor-pointer p-3 rounded-xl mx-2 my-1 hover:bg-purple-50 focus:bg-purple-50">
+                    </DropdownMenuItem> */}
+                    
+                    {/* <DropdownMenuItem className="cursor-pointer p-3 rounded-xl mx-2 my-1 hover:bg-purple-50 focus:bg-purple-50">
                       <Activity className="mr-2 h-4 w-4 text-[#8A2BE2]" />
                       <span>Activity Log</span>
-                    </DropdownMenuItem>
+                    </DropdownMenuItem> */}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={logout}
@@ -524,14 +526,14 @@ export default function AdminLayout({ children }) {
                         <span>Profile</span>
                       </DropdownMenuItem>
                     </Link>
-                    <DropdownMenuItem className="cursor-pointer p-3 rounded-xl mx-2 my-1 hover:bg-purple-50 focus:bg-purple-50">
+                    {/* <DropdownMenuItem className="cursor-pointer p-3 rounded-xl mx-2 my-1 hover:bg-purple-50 focus:bg-purple-50">
                       <Settings className="mr-2 h-4 w-4 text-[#4B0082]" />
                       <span>Settings</span>
                     </DropdownMenuItem>
                     <DropdownMenuItem className="cursor-pointer p-3 rounded-xl mx-2 my-1 hover:bg-purple-50 focus:bg-purple-50">
                       <Activity className="mr-2 h-4 w-4 text-[#4B0082]" />
                       <span>Activity Log</span>
-                    </DropdownMenuItem>
+                    </DropdownMenuItem> */}
                     <DropdownMenuSeparator className="bg-purple-100" />
                     <DropdownMenuItem
                       onClick={logout}
