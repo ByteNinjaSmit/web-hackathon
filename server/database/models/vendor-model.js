@@ -64,6 +64,10 @@ const vendorSchema = new mongoose.Schema({
     zipCode: String,
     country: String,
   },
+  isVendor:{
+    type:Boolean,
+    default:true,
+  }
 });
 
 // Add 2dsphere index for geospatial queries

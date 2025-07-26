@@ -244,7 +244,6 @@ const googleLoginUser = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       token,
-      role: "user",
       isProfileComplete: user.isProfileComplete,
       user,
     });
@@ -311,7 +310,6 @@ const googleLoginVendor = async (req, res, next) => {
     return res.status(200).json({
       success: true,
       token,
-      role: "vendor",
       isProfileComplete: vendor.isProfileComplete,
       vendor,
     });

@@ -61,7 +61,10 @@ const userSchema = new mongoose.Schema({
       return !this.isGoogleAccount;
     },
   },
-
+  isUser:{
+    type:Boolean,
+    default:true,
+  }
 });
 
 userSchema.virtual('isProfileComplete').get(function () {

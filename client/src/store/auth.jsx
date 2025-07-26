@@ -1,6 +1,5 @@
 import axios from "axios";
 import { createContext, useContext, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
 // Create context
@@ -100,7 +99,7 @@ export const AuthProvider = ({ children }) => {
         // setIsSessionActive(false);
         // Check and set roles based on the user object
         if (user) {
-            const { isDeveloper, isAdmin } = user;
+            const { isDeveloper, isAdmin, isUser } = user;
             // console.log('User: ',user)
             setIsAdmin(isAdmin); // Admin if any of the roles is true
             // setisUser(isUser || false);
