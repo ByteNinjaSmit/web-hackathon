@@ -13,4 +13,7 @@ router.post("/google-login-vendor", authController.googleLoginVendor);
 router.post("/vendor/login", authController.loginVendor);
 router.post("/vendor/register", authController.registerVendor);
 
+//admin auth
+router.post("/admin/login", authController.loginAdmin);
+
 module.exports = router;

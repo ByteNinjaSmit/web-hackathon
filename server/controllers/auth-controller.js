@@ -426,6 +426,42 @@ const getCurrentUser = async (req, res, next) => {
   }
 };
 
+const loginAdmin = async (req, res, next) => {
+  try {
+    const { email, password } = req.body;
+     console.log('Admin Login Data: ', req.body);
+    if (!email || !password) {
+      return res
+        .status(400)
+        .json({ message: "Email and password are required." });
+    }
+
+    const admin = await Admin.findOne({ email });
+
+    if (!admin) {
+      console.log('Admin not found');
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    const isMatch = admin.password === password || await bcrypt.compare(password, admin.password);
+    if (!isMatch) {
+      console.log('Password mismatch');
+      return res.status(401).json({ message: "Invalid credentials" });
+    }
+
+    const token = await admin.generateToken();
+    return res.status(200).json({
+      message: "Admin login successful",
+      token,
+      adminId: admin._id.toString(),
+      admin,
+    });
+  } catch (error) {
+    logger.error("Admin login error", error);
+    next(error);
+  }
+};
+
 module.exports = {
   googleLogin,
   login,
@@ -435,4 +471,5 @@ module.exports = {
   googleLoginVendor,
   registerVendor,
   loginVendor,
+  loginAdmin
 };

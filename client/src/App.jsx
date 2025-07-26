@@ -28,6 +28,9 @@ import SupplierCommunication from "./pages/admin/SupplierCommunication";
 import VendorDashboardPage from "./pages/vendor/Vendor-Dashboard-Page";
 import StreetFoodDashboard from "./components/StreetFoodDashboard";
 import SidebarMenuItem from "./pages/admin/layout";
+import UserManagement from "./pages/admin/Users";
+import AdminProfile from "./pages/admin/Profile";
+import AdminLogin from "./pages/admin/Login";
 
 const App = () => {
   const location = useLocation();
@@ -55,13 +58,16 @@ const App = () => {
           <Route path="/profile" element={<ProfileManagement />} />
           <Route path="/location-search" element={<LocationBasedSearch />} />
 
-          <Route path="/admin" element={<SidebarMenuItem />}>
-            <Route index element={<VendorDashboardPage />} />
+            <Route path="/vendordashboard" element={<VendorDashboardPage />} />
+            <Route path="/adminlogin" element={<AdminLogin />} /> 
+            <Route path="/admin" element={<SidebarMenuItem />}>
             <Route path="pending-verifications" element={<PendingVerifications />} />
             <Route path="approved-suppliers" element={<ApprovedSuppliers />} />
             <Route path="rejected-suppliers" element={<RejectedSuppliers />} />
             <Route path="supplier-communication" element={<SupplierCommunication />} />
             <Route path="dashboard" element={<Dashboard />} />
+            <Route path="profile" element={<AdminProfile />} />
+            <Route path="users" element={<UserManagement />} />
           </Route>
 
         </Routes >

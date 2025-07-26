@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { CheckCircle, XCircle, Clock, AlertTriangle, MessageSquare, FileText, TrendingUp } from "lucide-react"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts"
+import { useAuth } from "@/store/auth"
 
 const analyticsData = [
   { name: "Pending", value: 12, color: "#F0AD4E" },

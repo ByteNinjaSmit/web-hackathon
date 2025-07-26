@@ -1,11 +1,9 @@
 "use client"
 
-import React from "react"
-import { useState } from "react"
-import { Suspense } from "react"
-import { Link, Outlet, useLocation, useNavigate } from "react-router-dom"
 
-``
+import { useState } from "react"
+import { Link, useLocation   } from "react-router-dom"
+import { Suspense } from "react"
 import {
   Bell,
   Search,
@@ -40,6 +38,8 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { cn } from "@/lib/utils"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
+import { Outlet } from "react-router-dom"
+import { useAuth } from "@/store/auth"
 
 const sidebarMenuItems = [
   {
@@ -87,6 +87,30 @@ const sidebarMenuItems = [
     ],
   },
   {
+    title: "ADMIN MANAGEMENT",
+    type: "section",
+    items: [
+      {
+        title: "Admin Users",
+        icon: Users,
+        href: "/admin/users",
+        type: "single",
+      },
+      {
+        title: "Activity Log",
+        icon: Activity,
+        href: "/admin/activity-log",
+        type: "single",
+      },
+      {
+        title: "My Profile",
+        icon: User,
+        href: "/admin/profile",
+        type: "single",
+      },
+    ],
+  },
+  {
     title: "ANALYTICS & REPORTS",
     type: "section",
     items: [
@@ -104,24 +128,6 @@ const sidebarMenuItems = [
         title: "Export Data",
         icon: FileText,
         href: "/admin/exports",
-        type: "single",
-      },
-    ],
-  },
-  {
-    title: "USER MANAGEMENT",
-    type: "section",
-    items: [
-      {
-        title: "Admin Users",
-        icon: Users,
-        href: "/admin/users",
-        type: "single",
-      },
-      {
-        title: "Permissions",
-        icon: Shield,
-        href: "/admin/permissions",
         type: "single",
       },
     ],
@@ -158,12 +164,14 @@ const notifications = [
 function SidebarMenuItem({ item, pathname, level = 0 }) {
   const [isExpanded, setIsExpanded] = useState(false)
   const Icon = item.icon
+  
+
 
   if (item.type === "single") {
     const isActive = pathname === item.href
     return (
       <Link
-          to={item.href}
+        to={item.href}
         className={cn(
           "flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all duration-300 group relative overflow-hidden",
           isActive
@@ -227,12 +235,16 @@ function SidebarMenuItem({ item, pathname, level = 0 }) {
 export default function AdminLayout({
   children,
 }) {
-  const pathname = useLocation().pathname;
+  const pathname = useLocation().pathname
   const [isSidebarOpen, setIsSidebarOpen] = useState(true)
   const [searchQuery, setSearchQuery] = useState("")
   const [isSearchFocused, setIsSearchFocused] = useState(false)
   const [unreadNotifications, setUnreadNotifications] = useState(2)
+const { API  , LogoutUser } = useAuth();
 
+  const logout = () => {
+    LogoutUser();
+  }
   const handleNotificationClick = () => {
     setUnreadNotifications(0)
   }
@@ -273,7 +285,7 @@ export default function AdminLayout({
             {/* Welcome Section */}
             <div className="bg-gradient-to-r from-purple-600/10 to-indigo-600/10 rounded-2xl p-4 border border-purple-500/20">
               <h2 className="text-lg font-semibold text-white mb-1">Welcome back, Admin</h2>
-              <p className="text-gray-400 text-sm">Manage your procurement platform efficiently</p>
+              <p className="text-gray-400 text-sm">Manage your procurement platform</p>
             </div>
           </div>
 
@@ -320,10 +332,10 @@ export default function AdminLayout({
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-48">
-                    <DropdownMenuItem className="cursor-pointer">
+                    <Link to={'/admin/profile'}><DropdownMenuItem className="cursor-pointer p-3 rounded-xl mx-2 my-1">
                       <User className="mr-2 h-4 w-4" />
                       <span>Profile</span>
-                    </DropdownMenuItem>
+                    </DropdownMenuItem></Link>
                     <DropdownMenuItem className="cursor-pointer">
                       <Settings className="mr-2 h-4 w-4" />
                       <span>Settings</span>
@@ -333,7 +345,7 @@ export default function AdminLayout({
                       <span>Activity Log</span>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="cursor-pointer text-red-600 focus:text-red-600">
+                    <DropdownMenuItem onClick={logout} className="cursor-pointer text-red-600 focus:text-red-600">
                       <LogOut className="mr-2 h-4 w-4" />
                       <span>Log out</span>
                     </DropdownMenuItem>
@@ -495,10 +507,11 @@ export default function AdminLayout({
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="cursor-pointer p-3 rounded-xl mx-2 my-1">
+
+                    <Link to={'/admin/profile'}><DropdownMenuItem className="cursor-pointer p-3 rounded-xl mx-2 my-1">
                       <User className="mr-2 h-4 w-4" />
                       <span>Profile</span>
-                    </DropdownMenuItem>
+                    </DropdownMenuItem></Link>
                     <DropdownMenuItem className="cursor-pointer p-3 rounded-xl mx-2 my-1">
                       <Settings className="mr-2 h-4 w-4" />
                       <span>Settings</span>
@@ -508,9 +521,9 @@ export default function AdminLayout({
                       <span>Activity Log</span>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="cursor-pointer text-red-600 focus:text-red-600 p-3 rounded-xl mx-2 my-1">
+                    <DropdownMenuItem onClick={logout} className="cursor-pointer text-red-600 focus:text-red-600 p-3 rounded-xl mx-2 my-1">
                       <LogOut className="mr-2 h-4 w-4" />
-                      <span>Log out</span>
+                      <span >Log out</span>
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
