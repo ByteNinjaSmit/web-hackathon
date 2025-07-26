@@ -176,9 +176,11 @@ export default function EnhancedApprovedSuppliers() {
     setProcessingIds((prev) => new Set([...prev, supplierId]))
 
     try {
+      const reason = "This supplier has violated our terms of service and will be permanently banned.";
       const response = await axios.post(`${API}/api/admin/reject`, {
         supplierId,
-      })
+        reason,
+      });
 
       const data = response.data
       if (!data.success) {
@@ -350,9 +352,8 @@ export default function EnhancedApprovedSuppliers() {
             return (
               <Card
                 key={supplier.id}
-                className={`bg-white/90 backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-500 border-0 ring-1 ring-purple-200 hover:ring-[#8A2BE2] hover:scale-105 ${
-                  isProcessingThis ? "opacity-75" : ""
-                }`}
+                className={`bg-white/90 backdrop-blur-sm shadow-xl hover:shadow-2xl transition-all duration-500 border-0 ring-1 ring-purple-200 hover:ring-[#8A2BE2] hover:scale-105 ${isProcessingThis ? "opacity-75" : ""
+                  }`}
               >
                 <CardHeader className="pb-4">
                   <div className="flex justify-between items-start">
