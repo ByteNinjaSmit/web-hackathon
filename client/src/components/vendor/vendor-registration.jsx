@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import { UserPlus, Eye, EyeOff, MapPin, CheckCircle } from "lucide-react";
 import { toast } from "react-toastify"; // Make sure you have react-toastify installed and configured in your main App.jsx
+import { useGoogleLogin } from "@react-oauth/google";
+import axios from "axios";
+import { useAuth } from "../../store/auth.jsx";
+import { useNavigate } from "react-router-dom";
 
 // --- UI Component Replacements ---
 const Card = ({ children, className }) => <div className={`bg-white rounded-2xl shadow-xl border-2 border-gray-100 ${className}`}>{children}</div>;
@@ -26,10 +30,11 @@ const GoogleIcon = (props) => (
     </svg>
 );
 
-// Correctly export the form component as the default
 export default function VendorRegistrationForm() {
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+    const { storeTokenInCookies, API } = useAuth();
+    const navigate = useNavigate();
     const [formData, setFormData] = useState({
         name: "",
         email: "",
@@ -70,6 +75,56 @@ export default function VendorRegistrationForm() {
         }
     };
 
+    // Google login response handler
+    const responseGoogle = async (tokenResponse) => {
+        try {
+            if (tokenResponse.code) {
+                // Get user info from Google
+                const response = await axios.get(
+                    `${API}/api/auth/google-login?code=${tokenResponse.code}`
+                );
+                
+                if (response.status === 200) {
+                    const data = response.data;
+                    
+                    // Now register as vendor with Google data
+                    const vendorResponse = await axios.post(
+                        `${API}/api/auth/google-login-vendor`,
+                        {
+                            email: data.user.email,
+                            name: data.user.name,
+                            picture: data.user.profilePicture,
+                            // Include any additional fields that might be in the form
+                            phone: formData.phone || "",
+                            businessName: formData.businessName || "",
+                            address: formData.address || {},
+                            location: formData.location || {}
+                        }
+                    );
+                    
+                    if (vendorResponse.status === 200) {
+                        toast.success("Google registration successful!");
+                        storeTokenInCookies(vendorResponse.data.token);
+                        navigate("/vendordashboard");
+                    }
+                }
+            }
+        } catch (error) {
+            console.error("Google registration error:", error);
+            toast.error("Error in registering, Please Try Again!");
+        }
+    };
+
+    // Google login hook
+    const GoogleLogin = useGoogleLogin({
+        onSuccess: responseGoogle,
+        onError: (error) => {
+            console.error("Google login error:", error);
+            toast.error("Google login failed. Please try again.");
+        },
+        flow: "auth-code",
+    });
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         if (formData.password !== formData.confirmPassword) {
@@ -81,27 +136,18 @@ export default function VendorRegistrationForm() {
 
         try {
             // Make the API call to your backend
-            const response = await fetch("http://localhost:5173/api/auth/vendor/register", { // Adjust URL if needed
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify(formData),
-            });
+            const response = await axios.post(
+                `${API}/api/auth/vendor/register`,
+                formData
+            );
 
-            const data = await response.json();
-
-            if (response.ok) {
+            if (response.status === 200 || response.status === 201) {
                 toast.success("Registration successful! You can now log in.");
-                // Optionally, redirect the user to the login page
-                // navigate('/vendor-login'); 
-            } else {
-                // Display error message from the backend
-                toast.error(data.message || "Registration failed. Please try again.");
+                navigate('/vendor-login');
             }
         } catch (error) {
             console.error("Registration error:", error);
-            toast.error("An unexpected error occurred. Please try again later.");
+            toast.error(error.response?.data?.message || "Registration failed. Please try again.");
         }
     };
 
@@ -114,7 +160,7 @@ export default function VendorRegistrationForm() {
                 </CardHeader>
                 <CardContent>
                     <form onSubmit={handleSubmit} className="grid gap-6">
-                        <Button variant="outline" type="button" className="w-full"><GoogleIcon /> Continue with Google</Button>
+                        <Button variant="outline" type="button" className="w-full" onClick={() => GoogleLogin()}><GoogleIcon /> Continue with Google</Button>
                         <div className="relative">
                             <div className="absolute inset-0 flex items-center"><span className="w-full border-t" /></div>
                             <div className="relative flex justify-center text-xs uppercase"><span className="bg-white px-2 text-gray-500">Or register with email</span></div>

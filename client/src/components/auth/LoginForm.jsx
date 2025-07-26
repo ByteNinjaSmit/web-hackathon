@@ -40,10 +40,6 @@ const AuthForms = () => {
     try {
       if (tokenResponse.code) {
         // For user login
-        const endpoint = currentForm === 'signup' 
-          ? `${API}/api/auth/google-login-vendor` 
-          : `${API}/api/auth/google-login-user`;
-          
         const response = await axios.get(
           `${API}/api/auth/google-login?code=${tokenResponse.code}`
         );

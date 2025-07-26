@@ -298,3 +298,27 @@ const AuthForms = () => {
 };
 
 export default AuthForms;
+
+
+// Google login response handler
+const responseGoogle = async (tokenResponse) => {
+  try {
+    if (tokenResponse.code) {
+      // For user signup
+      const response = await axios.get(
+        `${API}/api/auth/google-login?code=${tokenResponse.code}`
+      );
+      
+      if (response.status === 200) {
+        const data = response.data;
+        toast.success("Google signup successful!");
+        
+        storeTokenInCookies(data.token);
+        navigate("/");
+      }
+    }
+  } catch (error) {
+    console.error("Google signup error:", error);
+    toast.error("Error in signing up, Please Try Again!");
+  }
+};

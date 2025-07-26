@@ -7,6 +7,10 @@ import { Button } from "@/components/ui/button"
 import { Eye, EyeOff, LogIn } from "lucide-react"
 import { toast } from "react-toastify"
 import { Link } from "react-router-dom"
+import { useGoogleLogin } from "@react-oauth/google";
+import axios from "axios";
+import { useAuth } from "../../store/auth.jsx";
+import { useNavigate } from "react-router-dom";
 
 // SVG component for the Google Icon with original colors
 const GoogleIcon = (props) => (
@@ -24,6 +28,59 @@ export function VendorLoginForm() {
         store_id: "",
         password: "",
     })
+    const { storeTokenInCookies, API } = useAuth();
+    const navigate = useNavigate();
+
+    // Google login response handler
+    const responseGoogle = async (tokenResponse) => {
+        try {
+            if (tokenResponse.code) {
+                // Get user info from Google
+                const response = await axios.get(
+                    `${API}/api/auth/google-login?code=${tokenResponse.code}`
+                );
+                
+                if (response.status === 200) {
+                    const data = response.data;
+                    
+                    // Now use this data to login as vendor
+                    const vendorResponse = await axios.post(
+                        `${API}/api/auth/google-login-vendor`,
+                        {
+                            email: data.user.email,
+                            name: data.user.name,
+                            picture: data.user.profilePicture || null
+                        }
+                    );
+                    
+                    if (vendorResponse.status === 200) {
+                        toast.success("Google login successful!");
+                        storeTokenInCookies(vendorResponse.data.token);
+                        navigate("/vendordashboard");
+                    }
+                }
+            }
+        } catch (error) {
+            console.error("Google login error:", error);
+            // Add more detailed error logging
+            if (error.response) {
+                console.error("Error response:", error.response.data);
+                toast.error(error.response.data.message || "Error in logging in, Please Try Again!");
+            } else {
+                toast.error("Error in logging in, Please Try Again!");
+            }
+        }
+    };
+
+    // Google login hook
+    const GoogleLogin = useGoogleLogin({
+        onSuccess: responseGoogle,
+        onError: (error) => {
+            console.error("Google login error:", error);
+            toast.error("Google login failed. Please try again.");
+        },
+        flow: "auth-code",
+    });
 
     const handleChange = (e) => {
         const { id, value } = e.target
@@ -109,7 +166,8 @@ export function VendorLoginForm() {
                         </span>
                       </div>
                     </div>
-                    <Button variant="outline" type="button" className="w-full">
+                    // Update the Google button to use the GoogleLogin function
+                    <Button variant="outline" type="button" className="w-full" onClick={() => GoogleLogin()}>
                       <GoogleIcon />
                       Continue with Google
                     </Button>
