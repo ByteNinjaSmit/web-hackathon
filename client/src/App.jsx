@@ -31,6 +31,9 @@ import StreetFoodDashboard from "./pages/client/StreetFoodDashboard";
 // import StreetFoodDashboard from "./components/StreetFoodDashboard";
 import SidebarMenuItem from "./pages/admin/layout";
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import AdminLogin from "./pages/admin/Login";
+import AdminProfile from "./pages/admin/Profile";
+import UserManagement from "./pages/admin/Users";
 
 // ProtectedRoute component
 const ProtectedRoute = ({ children }) => {
@@ -50,7 +53,7 @@ const App = () => {
         {/* Routes */}
         <Routes>
           <Route path="/vendor-register" element={<GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}><VendorRegistrationPage /></GoogleOAuthProvider>} />
-          <Route path="/vendor-Login" element={<GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}><VendorLoginPage /></GoogleOAuthProvider>} />
+          <Route path="/vendor-login" element={<GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}><VendorLoginPage /></GoogleOAuthProvider>} />
 
           <Route path="/" element={<StreetFoodDashboard />} />
           <Route path="/home" element={<StreetFoodDashboard />} />
@@ -60,22 +63,25 @@ const App = () => {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/otp-verification" element={<OTPVerification />} />
           <Route path="/marketplace" element={<VendorMarketplace />} />
-          <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
-          <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
-          <Route path="/orders" element={<ProtectedRoute><OrderManagement /></ProtectedRoute>} />
-          <Route path="/payment" element={<ProtectedRoute><PaymentIntegration /></ProtectedRoute>} />
-          <Route path="/chat" element={<ProtectedRoute><ChatSupport /></ProtectedRoute>} />
-          <Route path="/inventory" element={<ProtectedRoute><InventoryTracker /></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><ProfileManagement /></ProtectedRoute>} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/favorites" element={<Favorites />} />
+          <Route path="/orders" element={<OrderManagement />} />
+          <Route path="/payment" element={<PaymentIntegration />} />
+          <Route path="/chat" element={<ChatSupport />} />
+          <Route path="/inventory" element={<InventoryTracker />} />
+          <Route path="/profile" element={<ProfileManagement />} />
           <Route path="/location-search" element={<LocationBasedSearch />} />
 
-          <Route path="/admin" element={<SidebarMenuItem />}>
-            <Route index element={<VendorDashboardPage />} />
+            <Route path="/vendordashboard" element={<VendorDashboardPage />} />
+            <Route path="/adminlogin" element={<AdminLogin />} /> 
+            <Route path="/admin" element={<SidebarMenuItem />}>
             <Route path="pending-verifications" element={<PendingVerifications />} />
             <Route path="approved-suppliers" element={<ApprovedSuppliers />} />
             <Route path="rejected-suppliers" element={<RejectedSuppliers />} />
             <Route path="supplier-communication" element={<SupplierCommunication />} />
             <Route path="dashboard" element={<Dashboard />} />
+            <Route path="profile" element={<AdminProfile />} />
+            <Route path="users" element={<UserManagement />} />
           </Route>
 
         </Routes >
