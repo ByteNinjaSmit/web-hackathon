@@ -1,188 +1,171 @@
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+import axios from 'axios';
 
-// Helper function to make API requests
+// API base URL from environment variables
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+
+// Create axios instance with default config
+const apiClient = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// Helper function for API requests
 const apiRequest = async (endpoint, options = {}) => {
-  const url = `${API_BASE_URL}${endpoint}`;
-  
-  const config = {
-    headers: {
-      'Content-Type': 'application/json',
-      ...options.headers,
-    },
-    ...options,
-  };
-
   try {
-    const response = await fetch(url, config);
-    
-    if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
-    }
-    
-    return await response.json();
+    const response = await apiClient({
+      url: endpoint,
+      ...options,
+    });
+    return response.data;
   } catch (error) {
-    console.error('API request failed:', error);
+    console.error('API Request Error:', error);
     throw error;
   }
 };
 
-// Location-based vendor API functions
+// Vendor API functions
 export const vendorApi = {
   // Get nearby vendors
-  getNearbyVendors: async (params = {}) => {
-    const queryString = new URLSearchParams(params).toString();
-    return apiRequest(`/vendors/nearby?${queryString}`);
+  getNearbyVendors: async (params) => {
+    const { latitude, longitude, maxDistance = 10, includeProducts = false } = params;
+    return apiRequest('/api/vendors/nearby', {
+      method: 'GET',
+      params: {
+        latitude,
+        longitude,
+        maxDistance,
+        includeProducts,
+      },
+    });
   },
 
   // Get vendors with products
-  getVendorsWithProducts: async (params = {}) => {
-    const queryString = new URLSearchParams(params).toString();
-    return apiRequest(`/vendors/with-products?${queryString}`);
+  getVendorsWithProducts: async (params) => {
+    const { latitude, longitude, maxDistance = 10, category, search } = params;
+    return apiRequest('/api/vendors/with-products', {
+      method: 'GET',
+      params: {
+        latitude,
+        longitude,
+        maxDistance,
+        category,
+        search,
+      },
+    });
   },
 
-  // Get all vendors (admin)
+  // Get all vendors (for admin purposes)
   getAllVendors: async (params = {}) => {
-    const queryString = new URLSearchParams(params).toString();
-    return apiRequest(`/vendors?${queryString}`);
+    const { search, isVerified, page = 1, limit = 20 } = params;
+    return apiRequest('/api/vendors', {
+      method: 'GET',
+      params: {
+        search,
+        isVerified,
+        page,
+        limit,
+      },
+    });
   },
 };
 
-// Location-based product API functions
+// Product API functions
 export const productApi = {
   // Get products with location filtering
   getProducts: async (params = {}) => {
-    const queryString = new URLSearchParams(params).toString();
-    return apiRequest(`/products?${queryString}`);
+    const { latitude, longitude, maxDistance, category, search, page = 1, limit = 20 } = params;
+    return apiRequest('/api/products', {
+      method: 'GET',
+      params: {
+        latitude,
+        longitude,
+        maxDistance,
+        category,
+        search,
+        page,
+        limit,
+      },
+    });
   },
 
-  // Get products by vendor
+  // Get products by specific vendor
   getProductsByVendor: async (vendorId, params = {}) => {
-    const queryString = new URLSearchParams({ vendorId, ...params }).toString();
-    return apiRequest(`/products?${queryString}`);
+    const { page = 1, limit = 20 } = params;
+    return apiRequest(`/api/products/vendor/${vendorId}`, {
+      method: 'GET',
+      params: {
+        page,
+        limit,
+      },
+    });
   },
 };
 
-// Location-based search functions
+// High-level search functions
 export const locationSearch = {
-  // Search for products near user location
-  searchProductsNearby: async (searchParams = {}) => {
-    const {
+  // Search for products nearby
+  searchProductsNearby: async (params) => {
+    const { latitude, longitude, maxDistance = 10, category, search } = params;
+    return productApi.getProducts({
       latitude,
       longitude,
-      maxDistance = 10000,
+      maxDistance,
       category,
       search,
-      limit = 20,
-      skip = 0,
-      ...otherParams
-    } = searchParams;
-
-    const params = {
-      ...otherParams,
-      limit,
-      skip,
-    };
-
-    if (latitude && longitude) {
-      params.latitude = latitude;
-      params.longitude = longitude;
-      params.maxDistance = maxDistance;
-    }
-
-    if (category) {
-      params.category = category;
-    }
-
-    if (search) {
-      params.search = search;
-    }
-
-    return productApi.getProducts(params);
+    });
   },
 
-  // Search for vendors near user location
-  searchVendorsNearby: async (searchParams = {}) => {
-    const {
+  // Search for vendors nearby
+  searchVendorsNearby: async (params) => {
+    const { latitude, longitude, maxDistance = 10, category, search } = params;
+    return vendorApi.getVendorsWithProducts({
       latitude,
       longitude,
-      maxDistance = 10000,
-      includeProducts = false,
-      limit = 20,
-      skip = 0,
-      ...otherParams
-    } = searchParams;
-
-    const params = {
-      ...otherParams,
-      limit,
-      skip,
-    };
-
-    if (latitude && longitude) {
-      params.latitude = latitude;
-      params.longitude = longitude;
-      params.maxDistance = maxDistance;
-    }
-
-    if (includeProducts) {
-      params.includeProducts = includeProducts;
-    }
-
-    return vendorApi.getNearbyVendors(params);
-  },
-
-  // Get vendors with their products near user location
-  getVendorsWithProductsNearby: async (searchParams = {}) => {
-    const {
-      latitude,
-      longitude,
-      maxDistance = 10000,
+      maxDistance,
       category,
       search,
-      limit = 20,
-      skip = 0,
-      ...otherParams
-    } = searchParams;
+    });
+  },
 
-    const params = {
-      ...otherParams,
-      limit,
-      skip,
-    };
+  // Get vendors with products nearby
+  getVendorsWithProductsNearby: async (params) => {
+    const { latitude, longitude, maxDistance = 10, category, search } = params;
+    return vendorApi.getVendorsWithProducts({
+      latitude,
+      longitude,
+      maxDistance,
+      category,
+      search,
+    });
+  },
 
-    if (latitude && longitude) {
-      params.latitude = latitude;
-      params.longitude = longitude;
-      params.maxDistance = maxDistance;
-    }
-
-    if (category) {
-      params.category = category;
-    }
-
-    if (search) {
-      params.search = search;
-    }
-
-    return vendorApi.getVendorsWithProducts(params);
+  // Get all nearby vendors (without products)
+  getAllNearbyVendors: async (params) => {
+    const { latitude, longitude, maxDistance = 10, includeProducts = false } = params;
+    return vendorApi.getNearbyVendors({
+      latitude,
+      longitude,
+      maxDistance,
+      includeProducts,
+    });
   },
 };
 
 // Utility functions
 export const locationUtils = {
   // Format distance for display
-  formatDistance: (distanceInMeters) => {
-    if (distanceInMeters < 1000) {
-      return `${Math.round(distanceInMeters)}m`;
-    } else {
-      return `${(distanceInMeters / 1000).toFixed(1)}km`;
-    }
+  formatDistance: (distance) => {
+    if (!distance) return 'N/A';
+    if (distance < 1) return `${(distance * 1000).toFixed(0)}m`;
+    return `${distance.toFixed(1)}km`;
   },
 
-  // Calculate distance between two points (client-side fallback)
+  // Calculate distance between two points (Haversine formula)
   calculateDistance: (lat1, lon1, lat2, lon2) => {
-    const R = 6371; // Radius of the Earth in kilometers
+    const R = 6371; // Earth's radius in kilometers
     const dLat = (lat2 - lat1) * Math.PI / 180;
     const dLon = (lon2 - lon1) * Math.PI / 180;
     const a = 
@@ -190,17 +173,54 @@ export const locationUtils = {
       Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
       Math.sin(dLon/2) * Math.sin(dLon/2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-    const distance = R * c; // Distance in kilometers
-    return Math.round(distance * 1000); // Return in meters
+    return R * c;
   },
 
   // Validate coordinates
   validateCoordinates: (latitude, longitude) => {
-    const lat = parseFloat(latitude);
-    const lng = parseFloat(longitude);
-    
-    return !isNaN(lat) && !isNaN(lng) && 
-           lat >= -90 && lat <= 90 && 
-           lng >= -180 && lng <= 180;
+    return (
+      typeof latitude === 'number' && 
+      typeof longitude === 'number' &&
+      latitude >= -90 && latitude <= 90 &&
+      longitude >= -180 && longitude <= 180
+    );
   },
+
+  // Get current location from browser
+  getCurrentLocation: () => {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error('Geolocation is not supported by this browser'));
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          resolve({
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy,
+            timestamp: position.timestamp,
+          });
+        },
+        (error) => {
+          reject(error);
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 300000, // 5 minutes
+        }
+      );
+    });
+  },
+};
+
+// Export default for convenience
+export default {
+  vendorApi,
+  productApi,
+  locationSearch,
+  locationUtils,
+  apiRequest,
 }; 

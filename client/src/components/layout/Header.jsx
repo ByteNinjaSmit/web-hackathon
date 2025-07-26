@@ -1,9 +1,17 @@
 import React, { useState } from 'react';
-import { Truck, Bell, ShoppingCart, User, Menu, X } from 'lucide-react';
+import { Truck, Bell, ShoppingCart, User, Menu, X, LogOut, Settings } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../store/auth';
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const { isLoggedIn, user, LogoutUser } = useAuth();
+
+  const handleLogout = () => {
+    LogoutUser();
+    setIsUserMenuOpen(false);
+  };
 
   return (
     <header className="bg-white shadow-sm border-b border-purple-100">
@@ -39,15 +47,70 @@ const Header = () => {
             <Link to="/cart" className="p-2 text-gray-600 hover:text-purple-600">
               <ShoppingCart className="h-5 w-5" />
             </Link>
-            <Link to="/profile" className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
-              <User className="h-4 w-4" />
-              <span className="hidden sm:block">Profile</span>
-            </Link>
 
-            {/* Login / Get Started Button */}
-            <Link to="/login" className="bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-purple-700 transition-colors">
-              Login / Get Started
-            </Link>
+            {/* User Menu */}
+            {isLoggedIn && user ? (
+              <div className="relative">
+                <button
+                  onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
+                  className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+                >
+                  <User className="h-4 w-4" />
+                  <span className="hidden sm:block">
+                    {user.name || user.email || 'User'}
+                  </span>
+                </button>
+
+                {/* User Dropdown Menu */}
+                {isUserMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50 border border-gray-200">
+                    <div className="px-4 py-2 border-b border-gray-100">
+                      <p className="text-sm font-medium text-gray-900">
+                        {user.name || 'User'}
+                      </p>
+                      <p className="text-xs text-gray-500">{user.email}</p>
+                    </div>
+                    <Link
+                      to="/profile"
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      <User className="h-4 w-4 mr-2" />
+                      Profile
+                    </Link>
+                    <Link
+                      to="/orders"
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      <ShoppingCart className="h-4 w-4 mr-2" />
+                      My Orders
+                    </Link>
+                    <Link
+                      to="/favorites"
+                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={() => setIsUserMenuOpen(false)}
+                    >
+                      <Bell className="h-4 w-4 mr-2" />
+                      Favorites
+                    </Link>
+                    <div className="border-t border-gray-100">
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center w-full px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                      >
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Logout
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link to="/login" className="bg-purple-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-purple-700 transition-colors">
+                Login / Get Started
+              </Link>
+            )}
 
             {/* Mobile Menu Button */}
             <button
@@ -69,7 +132,23 @@ const Header = () => {
             <Link to="/favorites" className="block text-gray-600" onClick={() => setIsMobileMenuOpen(false)}>Favorites</Link>
             <Link to="/help" className="block text-gray-600" onClick={() => setIsMobileMenuOpen(false)}>Help</Link>
             <Link to="/cart" className="block text-gray-600" onClick={() => setIsMobileMenuOpen(false)}>Cart</Link>
-            <Link to="/profile" className="block text-gray-600" onClick={() => setIsMobileMenuOpen(false)}>Profile</Link>
+            
+            {isLoggedIn && user ? (
+              <>
+                <Link to="/profile" className="block text-gray-600" onClick={() => setIsMobileMenuOpen(false)}>Profile</Link>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="block w-full text-left text-red-600"
+                >
+                  Logout
+                </button>
+              </>
+            ) : (
+              <Link to="/login" className="block text-purple-600 font-medium" onClick={() => setIsMobileMenuOpen(false)}>Login</Link>
+            )}
           </div>
         </div>
       )}

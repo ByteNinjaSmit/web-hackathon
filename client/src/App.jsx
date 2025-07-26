@@ -17,6 +17,7 @@ import ProfileManagement from './components/ProfileManagement';
 import Favorites from "./components/Faviourites";
 import VendorRegistrationPage from "./pages/vendor/Vendor-Registeration-Page";
 import VendorLoginPage from "./pages/vendor/Vendor-Login-Page";
+import LocationBasedSearch from "./components/LocationBasedSearch";
 
 //admin pages import
 import AdminLayout from "./components/admin/AdminLayout";
@@ -52,6 +53,7 @@ const App = () => {
           <Route path="/chat" element={<ChatSupport />} />
           <Route path="/inventory" element={<InventoryTracker />} />
           <Route path="/profile" element={<ProfileManagement />} />
+          <Route path="/location-search" element={<LocationBasedSearch />} />
           <Route path="/admin" element={<AdminLayout />}>
             <Route index element={<VendorDashboardPage />} />
             <Route path="pending-verifications" element={<PendingVerifications />} />
