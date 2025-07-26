@@ -1,5 +1,3 @@
-"use client"
-
 import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -83,15 +81,30 @@ export default function PendingVerifications() {
   const handleApprove = async (supplierId) => {
     setIsProcessing(true)
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+      const Vendordata = { supplierId };
+      console.log("Rejecting supplier data:", Vendordata);
+      const res = await axios.post(
+        `${API}/api/admin/approve`,
+        Vendordata,
+        {
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      const data = res.data;
+      if (!data.success) {
+
+        throw new Error(data.message || "Failed to reject supplier");
+      }
+
       setActionFeedback({
         type: "success",
         message: "Supplier has been approved successfully!",
         supplierId,
       })
       console.log("Approving supplier:", supplierId)
-      // Remove from pending list or update status
+      await fetchvendors(); // Refresh the list after approval
+      setSelectedSupplier(null) // Close the dialog after approval  
     } catch (error) {
       setActionFeedback({
         type: "error",
@@ -100,43 +113,49 @@ export default function PendingVerifications() {
       })
     } finally {
       setIsProcessing(false)
-      setTimeout(() => setActionFeedback(null), 3000)
     }
   }
 
   const handleReject = async (supplierId, reason) => {
-    setIsProcessing(true)
+    setIsProcessing(true);
     try {
-       const res = await axios.post(
-        `http://localhost:5000/api/admin/reject`,
-        supplierId , reason , // this is the request body
+      const Vendordata = { supplierId, reason };
+      console.log("Rejecting supplier data:", Vendordata);
+      const res = await axios.post(
+        `${API}/api/admin/reject`,
+        Vendordata,
         {
           headers: { "Content-Type": "application/json" },
         }
       );
 
-      const data = await res.data;
+      const data = res.data;
       if (!data.success) {
         throw new Error(data.message || "Failed to reject supplier");
       }
-      
+
       setActionFeedback({
         type: "error",
         message: "Supplier has been rejected.",
         supplierId,
-      })
-      console.log("Rejecting supplier:", supplierId, "Reason:", reason)
+      });
+
+      console.log("Rejecting supplier:", supplierId, "Reason:", reason);
+      await fetchvendors(); // Refresh the list after rejection
+      setSelectedSupplier(null)
     } catch (error) {
       setActionFeedback({
         type: "error",
         message: "Failed to reject supplier. Please try again.",
         supplierId,
-      })
+      });
     } finally {
-      setIsProcessing(false)
-      setTimeout(() => setActionFeedback(null), 3000)
+      setIsProcessing(false);
+
+      // setTimeout(() => setActionFeedback(null), 3000);
     }
-  }
+  };
+
 
   const handleMarkAsReview = async (supplierId) => {
     setIsProcessing(true)
@@ -323,11 +342,11 @@ export default function PendingVerifications() {
                         View Details
                       </Button>
                     </DialogTrigger>
-                    <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto mx-4 sm:mx-auto">
-                      <DialogHeader>
-                        <DialogTitle className="text-[#4B2E83]">Supplier Verification Details</DialogTitle>
-                      </DialogHeader>
-                      {selectedSupplier && (
+                    {selectedSupplier && (
+                      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto mx-4 sm:mx-auto">
+                        <DialogHeader>
+                          <DialogTitle className="text-[#4B2E83]">Supplier Verification Details</DialogTitle>
+                        </DialogHeader>
                         <div className="space-y-6">
                           {/* Company Information - Make responsive */}
                           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -457,7 +476,7 @@ export default function PendingVerifications() {
 
                             <Dialog>
                               <DialogTrigger asChild>
-                                <Button variant="destructive" disabled={isProcessing}  className="w-full sm:w-auto">
+                                <Button variant="destructive" disabled={isProcessing} className="w-full sm:w-auto">
                                   <XCircle className="h-4 w-4 mr-2" />
                                   Reject
                                 </Button>
@@ -489,7 +508,7 @@ export default function PendingVerifications() {
                                       }}
                                       disabled={!rejectionReason.trim() || isProcessing}
                                       className="w-full sm:w-auto"
-                                      
+
                                     >
                                       {isProcessing ? (
                                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
@@ -502,8 +521,8 @@ export default function PendingVerifications() {
                             </Dialog>
                           </div>
                         </div>
-                      )}
-                    </DialogContent>
+                      </DialogContent>
+                    )}
                   </Dialog>
                 </div>
               </div>
