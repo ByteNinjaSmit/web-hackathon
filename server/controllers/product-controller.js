@@ -196,4 +196,62 @@ const deleteProduct = async (req, res, next) => {
 
 
 
-module.exports = { addProduct, getProducts, updateProduct, deleteProduct };
+// Get products by vendor ID
+const getProductsByVendor = async (req, res, next) => {
+  try {
+    const { vendorId } = req.params;
+    const { 
+      limit = 20, 
+      page = 1,
+      sort = "-createdAt",
+      category,
+      search 
+    } = req.query;
+    
+    // Calculate skip value for pagination
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+    
+    // Build filter object
+    const filter = { 
+      supplierId: vendorId,
+      isDeleted: { $ne: true } 
+    };
+    
+    // Add optional filters
+    if (category) filter.category = category;
+    if (search) filter.name = { $regex: search, $options: "i" };
+    
+    // Execute query with pagination
+    const products = await Product.find(filter)
+      .populate('supplierId', 'name businessName location address email')
+      .sort(sort)
+      .skip(skip)
+      .limit(parseInt(limit))
+      .lean();
+    
+    // Get total count for pagination
+    const total = await Product.countDocuments(filter);
+    
+    // Return response
+    res.json({ 
+      success: true, 
+      products,
+      total,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        totalPages: Math.ceil(total / parseInt(limit))
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+module.exports = { 
+  addProduct, 
+  getProducts, 
+  updateProduct, 
+  deleteProduct,
+  getProductsByVendor  // Add the new function to exports
+};

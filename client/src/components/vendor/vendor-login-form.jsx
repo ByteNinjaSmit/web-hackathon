@@ -166,13 +166,11 @@ export function VendorLoginForm() {
                         </span>
                       </div>
                     </div>
-                    // Update the Google button to use the GoogleLogin function
+                    {/*  Update the Google button to use the GoogleLogin function*/}
                     <Button variant="outline" type="button" className="w-full" onClick={() => GoogleLogin()}>
                       <GoogleIcon />
                       Continue with Google
-                    </Button>
-                    {/* --------------------------- */}
-                    
+                    </Button>                    
                     <Button type="submit" className="w-full bg-[#8A2BE2] text-white hover:bg-[#8A2BE2]/90 cursor-pointer">
                         <LogIn className="mr-2 h-4 w-4" /> Login
                     </Button>

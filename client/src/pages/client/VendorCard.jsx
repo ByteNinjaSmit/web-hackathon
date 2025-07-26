@@ -1,7 +1,10 @@
 import React from 'react';
 import { Star, MapPin, Clock, Phone, Package, Building2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 const VendorCard = ({ vendor }) => {
+  const navigate = useNavigate();
+  
   // Helper function to get category icon
   const getCategoryIcon = (category) => {
     const icons = {
@@ -32,6 +35,11 @@ const VendorCard = ({ vendor }) => {
   };
 
   const status = getVendorStatus(vendor);
+  
+  // Handle View Products button click
+  const handleViewProducts = () => {
+    navigate(`/vendor-products/${vendor.id}`, { state: { vendor } });
+  };
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
@@ -113,7 +121,10 @@ const VendorCard = ({ vendor }) => {
 
         {/* Action Buttons */}
         <div className="flex space-x-2">
-          <button className="flex-1 bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors">
+          <button 
+            onClick={handleViewProducts}
+            className="flex-1 bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors"
+          >
             View Products
           </button>
           {vendor.phone && (

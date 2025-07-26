@@ -15,6 +15,7 @@ import ChatSupport from './pages/client/ChatSupport';
 import InventoryTracker from './pages/client/InventoryTracker';
 import ProfileManagement from './pages/client/ProfileManagement';
 import Favorites from "./pages/client/Faviourites";
+import VendorProducts from './pages/client/VendorProducts';
 // Remove the old registration page import if you're no longer using it
 // import VendorRegistrationPage from "./pages/vendor/Vendor-Registeration-Page"; 
 import VendorLoginPage from "./pages/vendor/Vendor-Login-Page";
@@ -90,8 +91,8 @@ const App = () => {
             <Route path="profile" element={<AdminProfile />} />
             <Route path="users" element={<UserManagement />} />
           </Route>
-
-        </Routes >
+          <Route path="/vendor-products/:vendorId" element={<VendorProducts />} />
+        </Routes>
       </div >
     </>
   )

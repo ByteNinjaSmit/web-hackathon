@@ -16,6 +16,7 @@ import {
   DollarSign,
   TrendingUp,
   Save,
+  Truck,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -197,7 +198,7 @@ export default function VendorDashboard() {
         <div className="p-6 border-b border-white/20">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-              <Store className="w-6 h-6" />
+              <Truck className="w-6 h-6" />
             </div>
             <div>
               <h2 className="font-bold text-lg">Vendor Portal</h2>
