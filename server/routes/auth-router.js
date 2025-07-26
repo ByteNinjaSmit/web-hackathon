@@ -4,6 +4,7 @@ const authController = require("../controllers/auth-controller");
 const router = express.Router();
 
 // User Auth
+router.get("/google-login", authController.googleLogin); // Add this new route
 router.post("/google-login-user", authController.googleLoginUser);
 router.post("/login", authController.login);
 router.post("/register", authController.register);

@@ -1,5 +1,10 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, User, Mail, Phone, MapPin, Lock, ArrowLeft, Truck } from 'lucide-react';
+import { useGoogleLogin } from '@react-oauth/google';
+import axios from 'axios';
+import { useAuth } from '../../store/auth.jsx';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
 
 // A simple SVG for the Google logo, used across all forms
 const GoogleIcon = () => (
@@ -24,6 +29,47 @@ const AuthForms = () => {
     lastName: '',
     phone: '',
     address: '',
+  });
+  
+  // Get auth context and navigation
+  const { storeTokenInCookies, API } = useAuth();
+  const navigate = useNavigate();
+
+  // Google login response handler
+  const responseGoogle = async (tokenResponse) => {
+    try {
+      if (tokenResponse.code) {
+        // For user login
+        const endpoint = currentForm === 'signup' 
+          ? `${API}/api/auth/google-login-vendor` 
+          : `${API}/api/auth/google-login-user`;
+          
+        const response = await axios.get(
+          `${API}/api/auth/google-login?code=${tokenResponse.code}`
+        );
+        
+        if (response.status === 200) {
+          const data = response.data;
+          toast.success("Google login successful!");
+          
+          storeTokenInCookies(data.token);
+          navigate("/");
+        }
+      }
+    } catch (error) {
+      console.error("Google login error:", error);
+      toast.error("Error in logging in, Please Try Again!");
+    }
+  };
+
+  // Google login hook
+  const GoogleLogin = useGoogleLogin({
+    onSuccess: responseGoogle,
+    onError: (error) => {
+      console.error("Google login error:", error);
+      toast.error("Google login failed. Please try again.");
+    },
+    flow: "auth-code",
   });
 
   // Handles changes in any form input field
@@ -71,6 +117,7 @@ const AuthForms = () => {
           {/* Google Sign-In Button */}
           <button
             type="button"
+            onClick={() => GoogleLogin()}
             className="w-full flex items-center justify-center py-3 px-4 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-all mb-4"
           >
             <GoogleIcon />
@@ -154,7 +201,11 @@ const AuthForms = () => {
           </div>
           
           {/* Google Sign-Up Button */}
-          <button type="button" className="w-full flex items-center justify-center py-3 px-4 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-all mb-4">
+          <button 
+            type="button" 
+            onClick={() => GoogleLogin()}
+            className="w-full flex items-center justify-center py-3 px-4 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-50 transition-all mb-4"
+          >
             <GoogleIcon />
             Continue with Google
           </button>
