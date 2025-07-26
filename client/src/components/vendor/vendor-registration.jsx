@@ -70,18 +70,39 @@ export default function VendorRegistrationForm() {
         }
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (formData.password !== formData.confirmPassword) {
-            toast.error("Passwords do not match.");
-            return;
+            return toast.error("Passwords do not match.");
         }
         if (formData.location.coordinates.length !== 2) {
-            toast.error("Please provide your location by clicking the button.");
-            return;
+            return toast.error("Please provide your location by clicking the button.");
         }
-        console.log("Vendor Registration Data:", formData);
-        toast.success("Registration successful! Check console for data.");
+
+        try {
+            // Make the API call to your backend
+            const response = await fetch("http://localhost:5173/api/auth/vendor/register", { // Adjust URL if needed
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(formData),
+            });
+
+            const data = await response.json();
+
+            if (response.ok) {
+                toast.success("Registration successful! You can now log in.");
+                // Optionally, redirect the user to the login page
+                // navigate('/vendor-login'); 
+            } else {
+                // Display error message from the backend
+                toast.error(data.message || "Registration failed. Please try again.");
+            }
+        } catch (error) {
+            console.error("Registration error:", error);
+            toast.error("An unexpected error occurred. Please try again later.");
+        }
     };
 
     return (

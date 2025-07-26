@@ -349,30 +349,58 @@ const googleLoginVendor = async (req, res, next) => {
 // Vendor Register
 const registerVendor = async (req, res, next) => {
   try {
-    const { name, email, phone, password, businessName, address, location } =
-      req.body;
-    const existingVendor = await Vendor.findOne({ email });
-    if (existingVendor) {
-      return res.status(409).json({ message: "Vendor already exists." });
-    }
-    const vendor = await Vendor.create({
+    // 1. Destructure all required fields from the request body
+    const {
       name,
       email,
       phone,
       password,
+      businessName,
+      address,
+      location,
+      fssaiNumber,
+      gstNumber,
+      businessLicense,
+    } = req.body;
+
+    // 2. Check if a vendor with the same email OR phone already exists
+    const existingVendor = await Vendor.findOne({ $or: [{ email }, { phone }] });
+    if (existingVendor) {
+      return res
+        .status(409)
+        .json({ message: "Vendor with this email or phone already exists." });
+    }
+
+    // 3. Create a new vendor document with all fields
+    const newVendor = await Vendor.create({
+      name,
+      email,
+      phone,
+      password, // The pre-save hook in your model will hash this
       isGoogleAccount: false,
       businessName,
       address,
       location,
+      fssaiNumber,
+      gstNumber,
+      businessLicense,
     });
+
+    // 4. Generate a JWT for the new vendor
+    const token = await newVendor.generateToken();
+
+    // 5. Send a success response with the token
     res.status(201).json({
       message: "Vendor registered successfully",
-      isProfileComplete: checkVendorProfileComplete(vendor),
-      vendor,
+      token: token,
+      vendorId: newVendor._id.toString(),
+      isProfileComplete: newVendor.isProfileComplete, // Use the virtual property from your schema
     });
+    
   } catch (error) {
     logger.error("Vendor register error", error);
-    next(error);
+    // Pass the error to your centralized error handler
+    next(error); 
   }
 };
 // Vendor Login
