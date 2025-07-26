@@ -13,7 +13,7 @@ import { MapPin, CheckCircle } from "lucide-react";
 
 export default function VendorCompleteProfilePage() {
   const navigate = useNavigate();
-  const { API } = useAuth();
+  const { API, authorizationToken } = useAuth();
   const [formData, setFormData] = useState({
     phone: "",
     businessName: "",
@@ -21,7 +21,7 @@ export default function VendorCompleteProfilePage() {
     gstNumber: "",
     businessLicense: "",
     address: { street: "", city: "", state: "", zipCode: "", country: "India" },
-    location: { type: 'Point', coordinates: [] },
+    location: { lat: null, lng: null },
   });
   const [loading, setLoading] = useState(false);
 
@@ -32,7 +32,7 @@ export default function VendorCompleteProfilePage() {
         const token = localStorage.getItem("authToken");
         if (!token) return;
         const res = await axios.get(`${API}/api/auth/current-user`, {
-          headers: { Authorization: `Bearer ${token}` },
+          headers: { Authorization: authorizationToken }, withCredentials: true,
         });
         if (res.data.user && res.data.user.role === "vendor") {
           const v = res.data.user;
@@ -68,7 +68,7 @@ export default function VendorCompleteProfilePage() {
       navigator.geolocation.getCurrentPosition(
         (position) => {
           const { longitude, latitude } = position.coords;
-          setFormData((prev) => ({ ...prev, location: { ...prev.location, coordinates: [longitude, latitude] } }));
+          setFormData((prev) => ({ ...prev, location: { lat: latitude, lng: longitude } }));
           toast.success("Location captured!");
         },
         () => toast.error("Could not get location. Check browser permissions.")
@@ -79,7 +79,7 @@ export default function VendorCompleteProfilePage() {
   };
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.location.coordinates.length !== 2) {
+    if (!formData.location.lat || !formData.location.lng) {
       return toast.error("Please provide your location by clicking the button.");
     }
     setLoading(true);
@@ -88,7 +88,7 @@ export default function VendorCompleteProfilePage() {
       const res = await axios.put(
         `${API}/api/auth/vendor/complete-profile`,
         { ...formData },
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: authorizationToken },withCredentials:true }
       );
       toast.success(res.data.message);
       navigate("/vendordashboard");
@@ -126,7 +126,12 @@ export default function VendorCompleteProfilePage() {
               <Label>Geographic Location</Label>
               <div className="flex items-center gap-4">
                 <Button variant="outline" type="button" onClick={handleGetLocation} className="w-full"><MapPin className="mr-2 h-4 w-4" /> Get Current Location</Button>
-                {formData.location.coordinates.length === 2 && (<div className="flex items-center text-green-600 font-medium text-sm"><CheckCircle className="mr-2 h-5 w-5" /> Location Captured</div>)}
+                {formData.location.lat && formData.location.lng && (
+                  <div className="flex items-center text-green-600 font-medium text-sm">
+                    <CheckCircle className="mr-2 h-5 w-5" /> Location Captured
+                    <span className="ml-2 text-gray-500">({formData.location.lat.toFixed(6)}, {formData.location.lng.toFixed(6)})</span>
+                  </div>
+                )}
               </div>
               <p className="text-xs text-gray-500 mt-1">We need your coordinates to show your business on the map.</p>
             </div>
@@ -136,4 +141,4 @@ export default function VendorCompleteProfilePage() {
       </Card>
     </div>
   );
-} 
+}

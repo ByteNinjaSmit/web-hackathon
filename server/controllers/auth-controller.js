@@ -110,7 +110,7 @@ const login = async (req, res, next) => {
       httpOnly: true, // Prevents access from client-side JavaScript
       secure: process.env.NODE_ENV === "production", // Only send over HTTPS in production
       sameSite: "strict", // Helps prevent CSRF attacks
-  });
+    });
 
     return res.status(200).json({
       message: "Login successful",
@@ -133,35 +133,35 @@ const login = async (req, res, next) => {
 const googleLogin = async (req, res, next) => {
   try {
     const { code } = req.query;
-    
+
     if (!code) {
-      return res.status(400).json({ 
-        success: false, 
-        message: "Authorization code is required" 
+      return res.status(400).json({
+        success: false,
+        message: "Authorization code is required",
       });
     }
 
     // Exchange the authorization code for tokens
     const { tokens } = await oauth2client.getToken(code);
-    
+
     // Get user info from Google
     const googleUser = await axios.get(
-      'https://www.googleapis.com/oauth2/v3/userinfo',
+      "https://www.googleapis.com/oauth2/v3/userinfo",
       { headers: { Authorization: `Bearer ${tokens.access_token}` } }
     );
-    
+
     const { email, name, picture } = googleUser.data;
-    
+
     if (!email) {
       return res.status(400).json({
         success: false,
-        message: "Email is required from Google profile."
+        message: "Email is required from Google profile.",
       });
     }
-    
+
     // Check if user exists
     let user = await User.findOne({ email });
-    
+
     if (user) {
       // If user exists but not registered with Google
       if (!user.isGoogleAccount) {
@@ -174,26 +174,26 @@ const googleLogin = async (req, res, next) => {
         name,
         email,
         isGoogleAccount: true,
-        profilePicture: picture
+        profilePicture: picture,
       });
     }
-    
+
     // Generate JWT token
     const token = await user.generateToken();
-    
+
     // Set token as cookie
-    res.cookie('authToken', token, {
+    res.cookie("authToken", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      maxAge: 24 * 60 * 60 * 1000 // 1 day
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
     });
-    
+
     return res.status(200).json({
       success: true,
       message: "Google login successful",
       token,
       isProfileComplete: checkUserProfileComplete(user),
-      user
+      user,
     });
   } catch (error) {
     logger.error("Google login error", error);
@@ -215,22 +215,18 @@ const googleLoginUser = async (req, res, next) => {
       typeOfCuisine,
     } = req.body;
     if (!email)
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Email is required from Google profile.",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Email is required from Google profile.",
+      });
     let user = await User.findOne({ email });
     if (user) {
       if (!user.isGoogleAccount) {
-        return res
-          .status(403)
-          .json({
-            success: false,
-            message:
-              "Account exists but not registered with Google. Use password login.",
-          });
+        return res.status(403).json({
+          success: false,
+          message:
+            "Account exists but not registered with Google. Use password login.",
+        });
       }
       // Update missing fields if provided
       let updated = false;
@@ -280,28 +276,99 @@ const googleLoginUser = async (req, res, next) => {
   }
 };
 
+// -----------------
+// Vendor Continue With Google
+// ------------------
+const vendorGoogleLogin = async (req, res, next) => {
+  try {
+    const { code } = req.query;
+
+    if (!code) {
+      return res.status(400).json({
+        success: false,
+        message: "Authorization code is required",
+      });
+    }
+
+    // Exchange the authorization code for tokens
+    const { tokens } = await oauth2client.getToken(code);
+
+    // Get user info from Google
+    const googleUser = await axios.get(
+      "https://www.googleapis.com/oauth2/v3/userinfo",
+      { headers: { Authorization: `Bearer ${tokens.access_token}` } }
+    );
+
+    const { email, name, picture } = googleUser.data;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email is required from Google profile.",
+      });
+    }
+
+    // Check if user exists
+    let user = await Vendor.findOne({ email });
+
+    if (user) {
+      // If user exists but not registered with Google
+      if (!user.isGoogleAccount) {
+        user.isGoogleAccount = true;
+        await user.save();
+      }
+    } else {
+      // Create new user
+      user = await Vendor.create({
+        name,
+        email,
+        isGoogleAccount: true,
+        profilePicture: picture,
+      });
+    }
+
+    // Generate JWT token
+    const token = await user.generateToken();
+
+    // Set token as cookie
+    res.cookie("authToken", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 24 * 60 * 60 * 1000, // 1 day
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Google login successful",
+      token,
+      isProfileComplete: user.isProfileComplete, // ✅ Added here
+
+      user,
+    });
+  } catch (error) {
+    logger.error("Google login error", error);
+    next(error);
+  }
+};
+
 // Google Login for Ingredient Suppliers (Vendor)
 const googleLoginVendor = async (req, res, next) => {
   try {
     const { email, name, picture, phone, businessName, address, location } =
       req.body;
     if (!email)
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Email is required from Google profile.",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Email is required from Google profile.",
+      });
     let vendor = await Vendor.findOne({ email });
     if (vendor) {
       if (!vendor.isGoogleAccount) {
-        return res
-          .status(403)
-          .json({
-            success: false,
-            message:
-              "Account exists but not registered with Google. Use password login.",
-          });
+        return res.status(403).json({
+          success: false,
+          message:
+            "Account exists but not registered with Google. Use password login.",
+        });
       }
       // Update missing fields if provided
       let updated = false;
@@ -364,7 +431,9 @@ const registerVendor = async (req, res, next) => {
     } = req.body;
 
     // 2. Check if a vendor with the same email OR phone already exists
-    const existingVendor = await Vendor.findOne({ $or: [{ email }, { phone }] });
+    const existingVendor = await Vendor.findOne({
+      $or: [{ email }, { phone }],
+    });
     if (existingVendor) {
       return res
         .status(409)
@@ -396,13 +465,13 @@ const registerVendor = async (req, res, next) => {
       vendorId: newVendor._id.toString(),
       isProfileComplete: newVendor.isProfileComplete, // Use the virtual property from your schema
     });
-    
   } catch (error) {
     logger.error("Vendor register error", error);
     // Pass the error to your centralized error handler
-    next(error); 
+    next(error);
   }
 };
+
 // Vendor Login
 const loginVendor = async (req, res, next) => {
   try {
@@ -440,62 +509,68 @@ const loginVendor = async (req, res, next) => {
 
 const getCurrentUser = async (req, res, next) => {
   try {
-      const token = req.cookies?.authToken;
+    const token = req.cookies?.authToken;
 
-      if (!token) {
-          return res.status(401).json({ message: "Unauthorized: No token provided" });
-      }
+    if (!token) {
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: No token provided" });
+    }
 
-      // Verify and decode token
-      const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-      const { userID, role } = decoded;
+    // Verify and decode token
+    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+    const { userID, role } = decoded;
 
-      // ✅ ADD THIS CHECK: Ensure the token payload is valid
-      if (!userID || !role) {
-          return res.status(401).json({ message: "Unauthorized: Invalid token payload" });
-      }
+    // ✅ ADD THIS CHECK: Ensure the token payload is valid
+    if (!userID || !role) {
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: Invalid token payload" });
+    }
 
-      // Validate role and model mapping
-      const roleModelMap = {
-          user: User,
-          admin: Admin,
-          vendor: Vendor,
-      };
-      const model = roleModelMap[role];
+    // Validate role and model mapping
+    const roleModelMap = {
+      user: User,
+      admin: Admin,
+      vendor: Vendor,
+    };
+    const model = roleModelMap[role];
 
-      if (!model) {
-          return res.status(400).json({ message: "Invalid user role in token" });
-      }
+    if (!model) {
+      return res.status(400).json({ message: "Invalid user role in token" });
+    }
 
-      // Fetch user
-      const userData = await model.findById(userID).select("-password");
+    // Fetch user
+    const userData = await model.findById(userID).select("-password");
 
-      if (!userData) {
-          return res.status(404).json({ message: "User not found" });
-      }
+    if (!userData) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-      return res.status(200).json({
-          user: userData,
-      });
+    return res.status(200).json({
+      user: userData,
+    });
   } catch (error) {
-      // ✅ ENHANCED CATCH BLOCK
-      if (error.name === 'TokenExpiredError') {
-          return res.status(401).json({ message: 'Unauthorized: Token has expired' });
-      }
-      if (error.name === 'JsonWebTokenError') {
-          return res.status(401).json({ message: 'Unauthorized: Invalid token' });
-      }
-      
-      // For other types of errors
-      console.error("Error fetching current user:", error);
-      next(error);
+    // ✅ ENHANCED CATCH BLOCK
+    if (error.name === "TokenExpiredError") {
+      return res
+        .status(401)
+        .json({ message: "Unauthorized: Token has expired" });
+    }
+    if (error.name === "JsonWebTokenError") {
+      return res.status(401).json({ message: "Unauthorized: Invalid token" });
+    }
+
+    // For other types of errors
+    console.error("Error fetching current user:", error);
+    next(error);
   }
 };
 
 const loginAdmin = async (req, res, next) => {
   try {
     const { email, password } = req.body;
-     console.log('Admin Login Data: ', req.body);
+    console.log("Admin Login Data: ", req.body);
     if (!email || !password) {
       return res
         .status(400)
@@ -505,13 +580,15 @@ const loginAdmin = async (req, res, next) => {
     const admin = await Admin.findOne({ email });
 
     if (!admin) {
-      console.log('Admin not found');
+      console.log("Admin not found");
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
-    const isMatch = admin.password === password || await bcrypt.compare(password, admin.password);
+    const isMatch =
+      admin.password === password ||
+      (await bcrypt.compare(password, admin.password));
     if (!isMatch) {
-      console.log('Password mismatch');
+      console.log("Password mismatch");
       return res.status(401).json({ message: "Invalid credentials" });
     }
 
@@ -533,18 +610,19 @@ const loginAdmin = async (req, res, next) => {
 // =============================
 const updateUserProfile = async (req, res, next) => {
   try {
-    const { name, phone, foodStallName, address, location, typeOfCuisine } = req.body;
-    
+    const { name, phone, foodStallName, address, location, typeOfCuisine } =
+      req.body;
+
     // Get user ID from the authenticated request
     const userId = req.user?._id;
-    
+
     if (!userId) {
       return res.status(401).json({ message: "User not authenticated" });
     }
 
     // Find the user
     const user = await User.findById(userId);
-    
+
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
@@ -575,11 +653,69 @@ const updateUserProfile = async (req, res, next) => {
         isGoogleAccount: user.isGoogleAccount,
         isProfileComplete: checkUserProfileComplete(user),
         createdAt: user.createdAt,
-        updatedAt: user.updatedAt
-      }
+        updatedAt: user.updatedAt,
+      },
     });
   } catch (error) {
     logger.error("Update profile error", error);
+    next(error);
+  }
+};
+
+// =============================
+// Update Vendor Profile (for Google signups)
+// =============================
+const updateVendorProfile = async (req, res, next) => {
+  try {
+    // Get vendor ID from the authenticated request (assume req.user is set by auth middleware)
+    const vendorId = req.user?._id;
+    if (!vendorId) {
+      return res.status(401).json({ message: "Vendor not authenticated" });
+    }
+    // Find the vendor
+    const vendor = await Vendor.findById(vendorId);
+    if (!vendor) {
+      return res.status(404).json({ message: "Vendor not found" });
+    }
+    // Only allow updating fields relevant for profile completion
+    const {
+      phone,
+      businessName,
+      address,
+      location,
+      fssaiNumber,
+      gstNumber,
+      businessLicense,
+    } = req.body;
+    if (phone !== undefined) vendor.phone = phone;
+    if (businessName !== undefined) vendor.businessName = businessName;
+    if (address !== undefined) vendor.address = address;
+    if (location !== undefined) vendor.location = location;
+    if (fssaiNumber !== undefined) vendor.fssaiNumber = fssaiNumber;
+    if (gstNumber !== undefined) vendor.gstNumber = gstNumber;
+    if (businessLicense !== undefined) vendor.businessLicense = businessLicense;
+    await vendor.save();
+    res.status(200).json({
+      message: "Vendor profile updated successfully",
+      vendor: {
+        _id: vendor._id,
+        name: vendor.name,
+        email: vendor.email,
+        phone: vendor.phone,
+        businessName: vendor.businessName,
+        address: vendor.address,
+        location: vendor.location,
+        fssaiNumber: vendor.fssaiNumber,
+        gstNumber: vendor.gstNumber,
+        businessLicense: vendor.businessLicense,
+        isGoogleAccount: vendor.isGoogleAccount,
+        isProfileComplete: checkVendorProfileComplete(vendor),
+        createdAt: vendor.createdAt,
+        updatedAt: vendor.updatedAt,
+      },
+    });
+  } catch (error) {
+    logger.error("Update vendor profile error", error);
     next(error);
   }
 };
@@ -594,5 +730,7 @@ module.exports = {
   registerVendor,
   loginVendor,
   loginAdmin,
-  updateUserProfile
+  updateUserProfile,
+  updateVendorProfile,
+  vendorGoogleLogin,
 };

@@ -1,12 +1,15 @@
 "use client"
-
-import { useState } from "react"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+
+//admin edit
+import React, { useState, useEffect } from "react";
+import axios from "axios";
+
 import {
   Search,
   Plus,
@@ -29,6 +32,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import { Alert, AlertDescription } from "@/components/ui/alert"
+import { useAuth } from "@/store/auth"
+import { toast } from "react-toastify"
 
 const adminUsers = [
   {
@@ -113,6 +118,7 @@ export default function UserManagement() {
   const [selectedUser, setSelectedUser] = useState(null)
   const [searchTerm, setSearchTerm] = useState("")
   const [statusFilter, setStatusFilter] = useState("all")
+  const { API, authorizationToken } = useAuth();
   const [showAddAdminDialog, setShowAddAdminDialog] = useState(false)
   const [newAdminData, setNewAdminData] = useState({
     email: "",
@@ -188,63 +194,67 @@ export default function UserManagement() {
 
     try {
       // Simulate API call to MongoDB
-      await new Promise((resolve) => setTimeout(resolve, 2000))
-
-      // In a real application, this would be an API call to your backend
-      // Example MongoDB integration:
-      /*
-      const response = await fetch('/api/admin/users', {
-        method: 'POST',
+      const response = await axios.post(`${API}/api/admin/register`, {
+        email: newAdminData.email,
+        password: newAdminData.password,
+      }, {
         headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('adminToken')}`
-        },
-        body: JSON.stringify({
-          email: newAdminData.email,
-          password: newAdminData.password,
-          role: 'admin',
-          status: 'active',
-          createdAt: new Date().toISOString(),
-          createdBy: 'current-admin-id'
-        })
+          Authorization:authorizationToken,
+        }, withCredentials: true
       })
 
-      if (!response.ok) {
-        throw new Error('Failed to create admin user')
+
+      if (response.status === 201) {
+        toast.success(response.data.message);
+        setAddAdminSuccess("Admin user created successfully!")
+        setShowAddAdminDialog(false)
+        const data= response.data;
+        console.log(`Data Response Sucess: `,data);
+        setNewAdminData({
+          email: "",
+          password: "",
+          confirmPassword: "",
+        })
+
       }
 
-      const result = await response.json()
-      */
-
       // For demo purposes, show success
-      setAddAdminSuccess("Admin user created successfully!")
 
       // Reset form
-      setNewAdminData({
-        email: "",
-        password: "",
-        confirmPassword: "",
-      })
 
       // Close dialog after 2 seconds
       setTimeout(() => {
-        setShowAddAdminDialog(false)
         setAddAdminSuccess("")
       }, 2000)
-
-      console.log("New admin created:", {
-        email: newAdminData.email,
-        role: "admin",
-        status: "active",
-        createdAt: new Date().toISOString(),
-      })
     } catch (error) {
+      toast.error(error.response.data.message);
       setAddAdminError("Failed to create admin user. Please try again.")
       console.error("Error creating admin:", error)
     } finally {
       setIsAddingAdmin(false)
     }
   }
+
+
+  //ADD NEW ADMIN PART
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios.get(`${API}/api/admin/users/register`, {
+          headers: {
+            Authorization: authorizationToken
+          }, withCredentials: true,
+        });
+        setData(response.data);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+
 
   const getStatusBadge = (status) => {
     return status === "active" ? (
@@ -501,9 +511,8 @@ export default function UserManagement() {
                   value={newAdminData.confirmPassword}
                   onChange={handleNewAdminInputChange}
                   placeholder="Confirm password"
-                  className={`pl-10 border-gray-200 focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 ${
-                    !passwordMatch && newAdminData.confirmPassword ? "border-red-300 focus:border-red-500" : ""
-                  }`}
+                  className={`pl-10 border-gray-200 focus:border-purple-600 focus:ring-2 focus:ring-purple-600/20 ${!passwordMatch && newAdminData.confirmPassword ? "border-red-300 focus:border-red-500" : ""
+                    }`}
                   required
                   disabled={isAddingAdmin}
                 />

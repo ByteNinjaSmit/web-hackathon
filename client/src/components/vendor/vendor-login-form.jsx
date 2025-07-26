@@ -15,10 +15,10 @@ import { useNavigate } from "react-router-dom";
 // SVG component for the Google Icon with original colors
 const GoogleIcon = (props) => (
     <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
-        <path d="M22.56 12.25C22.56 11.45 22.48 10.65 22.34 9.87H12.24V14.4H18.06C17.74 16.03 16.85 17.41 15.48 18.32V20.8H19.08C21.28 18.94 22.56 15.89 22.56 12.25Z" fill="#4285F4"/>
-        <path d="M12.24 23C15.11 23 17.55 22.09 19.08 20.8L15.48 18.32C14.51 18.99 13.45 19.39 12.24 19.39C9.82 19.39 7.74 17.88 6.96 15.69H3.28V18.27C4.85 21.16 8.24 23 12.24 23Z" fill="#34A853"/>
-        <path d="M6.96 15.69C6.7 14.99 6.56 14.25 6.56 13.5C6.56 12.75 6.7 12.01 6.96 11.31V8.73H3.28C2.45 10.22 2 11.8 2 13.5C2 15.2 2.45 16.78 3.28 18.27L6.96 15.69Z" fill="#FBBC05"/>
-        <path d="M12.24 7.61C13.56 7.61 14.63 8.05 15.52 8.89L19.16 5.27C17.55 3.79 15.11 2.91 12.24 2.91C8.24 2.91 4.85 4.84 3.28 7.73L6.96 10.31C7.74 8.12 9.82 6.61 12.24 7.61Z" fill="#EA4335"/>
+        <path d="M22.56 12.25C22.56 11.45 22.48 10.65 22.34 9.87H12.24V14.4H18.06C17.74 16.03 16.85 17.41 15.48 18.32V20.8H19.08C21.28 18.94 22.56 15.89 22.56 12.25Z" fill="#4285F4" />
+        <path d="M12.24 23C15.11 23 17.55 22.09 19.08 20.8L15.48 18.32C14.51 18.99 13.45 19.39 12.24 19.39C9.82 19.39 7.74 17.88 6.96 15.69H3.28V18.27C4.85 21.16 8.24 23 12.24 23Z" fill="#34A853" />
+        <path d="M6.96 15.69C6.7 14.99 6.56 14.25 6.56 13.5C6.56 12.75 6.7 12.01 6.96 11.31V8.73H3.28C2.45 10.22 2 11.8 2 13.5C2 15.2 2.45 16.78 3.28 18.27L6.96 15.69Z" fill="#FBBC05" />
+        <path d="M12.24 7.61C13.56 7.61 14.63 8.05 15.52 8.89L19.16 5.27C17.55 3.79 15.11 2.91 12.24 2.91C8.24 2.91 4.85 4.84 3.28 7.73L6.96 10.31C7.74 8.12 9.82 6.61 12.24 7.61Z" fill="#EA4335" />
     </svg>
 )
 
@@ -32,42 +32,34 @@ export function VendorLoginForm() {
     const navigate = useNavigate();
 
     // Google login response handler
+    // Google login response handler
     const responseGoogle = async (tokenResponse) => {
         try {
-            if (tokenResponse.code) {
+            if (tokenResponse["code"]) {
                 // Get user info from Google
                 const response = await axios.get(
-                    `${API}/api/auth/google-login?code=${tokenResponse.code}`
+                    `${API}/api/auth/vendor-google?code=${tokenResponse["code"]}`
                 );
-                
                 if (response.status === 200) {
-                    const data = response.data;
-                    
-                    // Now use this data to login as vendor
-                    const vendorResponse = await axios.post(
-                        `${API}/api/auth/google-login-vendor`,
-                        {
-                            email: data.user.email,
-                            name: data.user.name,
-                            picture: data.user.profilePicture || null
-                        }
-                    );
-                    
-                    if (vendorResponse.status === 200) {
-                        toast.success("Google login successful!");
-                        storeTokenInCookies(vendorResponse.data.token);
+                    toast.success("Google registration successful!");
+                    // console.log(`Data: `, response.data)
+                    storeTokenInCookies(response.data.token);
+                    if (data.isProfileComplete) {
                         navigate("/vendordashboard");
+                    } else {
+                        navigate("/vendor-complete-profile");
                     }
                 }
             }
+
         } catch (error) {
-            console.error("Google login error:", error);
+            console.error("Google registration error:", error);
             // Add more detailed error logging
             if (error.response) {
                 console.error("Error response:", error.response.data);
-                toast.error(error.response.data.message || "Error in logging in, Please Try Again!");
+                toast.error(error.response.data.message || "Error in registering, Please Try Again!");
             } else {
-                toast.error("Error in logging in, Please Try Again!");
+                toast.error("Error in registering, Please Try Again!");
             }
         }
     };
@@ -75,10 +67,7 @@ export function VendorLoginForm() {
     // Google login hook
     const GoogleLogin = useGoogleLogin({
         onSuccess: responseGoogle,
-        onError: (error) => {
-            console.error("Google login error:", error);
-            toast.error("Google login failed. Please try again.");
-        },
+        onError: responseGoogle,
         flow: "auth-code",
     });
 
@@ -157,22 +146,22 @@ export function VendorLoginForm() {
 
                     {/* --- Google Login Option --- */}
                     <div className="relative">
-                      <div className="absolute inset-0 flex items-center">
-                        <span className="w-full border-t" />
-                      </div>
-                      <div className="relative flex justify-center text-xs uppercase">
-                        <span className="bg-card px-2 text-muted-foreground">
-                          Or continue with
-                        </span>
-                      </div>
+                        <div className="absolute inset-0 flex items-center">
+                            <span className="w-full border-t" />
+                        </div>
+                        <div className="relative flex justify-center text-xs uppercase">
+                            <span className="bg-card px-2 text-muted-foreground">
+                                Or continue with
+                            </span>
+                        </div>
                     </div>
                     // Update the Google button to use the GoogleLogin function
                     <Button variant="outline" type="button" className="w-full" onClick={() => GoogleLogin()}>
-                      <GoogleIcon />
-                      Continue with Google
+                        <GoogleIcon />
+                        Continue with Google
                     </Button>
                     {/* --------------------------- */}
-                    
+
                     <Button type="submit" className="w-full bg-[#8A2BE2] text-white hover:bg-[#8A2BE2]/90 cursor-pointer">
                         <LogIn className="mr-2 h-4 w-4" /> Login
                     </Button>

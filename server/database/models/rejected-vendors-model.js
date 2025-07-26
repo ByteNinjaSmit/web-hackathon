@@ -57,5 +57,5 @@ const rejectVendor = new mongoose.Schema(
   }
 );
 
-const RVendor = mongoose.model("RVendor", rejectVendor);
+const RVendor = new mongoose.model("RVendor", rejectVendor);
 module.exports = RVendor;
