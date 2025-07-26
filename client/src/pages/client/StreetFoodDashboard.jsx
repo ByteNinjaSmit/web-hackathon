@@ -1,15 +1,12 @@
-<<<<<<< HEAD:client/src/pages/client/StreetFoodDashboard.jsx
 import React, { useState } from 'react';
 import Header from '../../components/layout/Header';
 import HeroSection from '../../components/layout/HeroSection';
-=======
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../store/auth';
 import { useLocation } from '../hooks/use-location';
 import { locationSearch } from '../services/locationApi';
 import Header from './layout/Header';
 import HeroSection from './layout/HeroSection';
->>>>>>> 5ebf657c532e5afb6954aad58c15b65e496efb63:client/src/components/StreetFoodDashboard.jsx
 import CategoryList from './CategoryList';
 import VendorList from './VendorList';
 import QuickActions from './QuickActions';
