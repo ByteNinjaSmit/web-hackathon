@@ -50,7 +50,7 @@ const App = () => {
         {/* Routes */}
         <Routes>
           <Route path="/vendor-register" element={<GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}><VendorRegistrationPage /></GoogleOAuthProvider>} />
-          <Route path="/vendor-Login" element={<GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}><VendorLoginPage /></GoogleOAuthProvider>} />
+          <Route path="/vendor-login" element={<GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}><VendorLoginPage /></GoogleOAuthProvider>} />
 
           <Route path="/" element={<StreetFoodDashboard />} />
           <Route path="/home" element={<StreetFoodDashboard />} />
@@ -60,13 +60,13 @@ const App = () => {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/otp-verification" element={<OTPVerification />} />
           <Route path="/marketplace" element={<VendorMarketplace />} />
-          <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
-          <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
-          <Route path="/orders" element={<ProtectedRoute><OrderManagement /></ProtectedRoute>} />
-          <Route path="/payment" element={<ProtectedRoute><PaymentIntegration /></ProtectedRoute>} />
-          <Route path="/chat" element={<ProtectedRoute><ChatSupport /></ProtectedRoute>} />
-          <Route path="/inventory" element={<ProtectedRoute><InventoryTracker /></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><ProfileManagement /></ProtectedRoute>} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/favorites" element={<Favorites />} />
+          <Route path="/orders" element={<OrderManagement />} />
+          <Route path="/payment" element={<PaymentIntegration />} />
+          <Route path="/chat" element={<ChatSupport />} />
+          <Route path="/inventory" element={<InventoryTracker />} />
+          <Route path="/profile" element={<ProfileManagement />} />
           <Route path="/location-search" element={<LocationBasedSearch />} />
 
           <Route path="/admin" element={<SidebarMenuItem />}>
