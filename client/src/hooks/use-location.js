@@ -1,41 +1,70 @@
 import { useState, useEffect, useCallback } from 'react';
 
-export function useLocation() {
+export function useLocation({ desiredAccuracy = 20, timeout = 10000, maxAge = 300000 } = {}) {
   const [location, setLocation] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [permission, setPermission] = useState('prompt'); // 'granted', 'denied', 'prompt'
 
-  // Get current location
+  // Get browser permission status using Permissions API
+  const checkPermission = useCallback(async () => {
+    if (!navigator.permissions) return;
+
+    try {
+      const status = await navigator.permissions.query({ name: 'geolocation' });
+      setPermission(status.state);
+
+      status.onchange = () => {
+        setPermission(status.state);
+      };
+    } catch (err) {
+      console.warn('Permissions API not supported or failed:', err);
+    }
+  }, []);
+
+  // Main function to get current location
   const getCurrentLocation = useCallback(() => {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
-        reject(new Error('Geolocation is not supported by this browser'));
+        reject(new Error('Geolocation is not supported by this browser.'));
         return;
       }
 
       setLoading(true);
       setError(null);
 
+      const options = {
+        enableHighAccuracy: true,
+        timeout: timeout, // e.g., 10 seconds
+        maximumAge: maxAge, // e.g., 5 minutes
+      };
+
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          const { latitude, longitude } = position.coords;
+          const { latitude, longitude, accuracy } = position.coords;
           const locationData = {
             latitude,
             longitude,
-            accuracy: position.coords.accuracy,
+            accuracy,
             timestamp: position.timestamp
           };
-          
-          setLocation(locationData);
-          setLoading(false);
-          setPermission('granted');
-          resolve(locationData);
+
+          if (accuracy <= desiredAccuracy || !desiredAccuracy) {
+            setLocation(locationData);
+            localStorage.setItem('userLocation', JSON.stringify(locationData));
+            setPermission('granted');
+            setLoading(false);
+            resolve(locationData);
+          } else {
+            setError(`Low accuracy: ${accuracy}m`);
+            setLoading(false);
+            reject(new Error(`Location accuracy ${accuracy}m is worse than desired ${desiredAccuracy}m.`));
+          }
         },
         (error) => {
           setLoading(false);
           setError(error.message);
-          
+
           switch (error.code) {
             case error.PERMISSION_DENIED:
               setPermission('denied');
@@ -49,30 +78,53 @@ export function useLocation() {
             default:
               setPermission('prompt');
           }
-          
+
           reject(error);
         },
-        {
-          enableHighAccuracy: true,
-          timeout: 10000,
-          maximumAge: 300000 // 5 minutes
-        }
+        options
       );
     });
-  }, []);
+  }, [desiredAccuracy, timeout, maxAge]);
 
-  // Request location permission and get location
+  // Retry logic: relaxed accuracy if high fails
   const requestLocation = useCallback(async () => {
     try {
       const result = await getCurrentLocation();
       return result;
-    } catch (error) {
-      console.error('Error getting location:', error);
-      throw error;
+    } catch (err) {
+      console.warn('High accuracy failed, retrying with relaxed settings...');
+      // Retry with relaxed settings (fallback)
+      return new Promise((resolve, reject) => {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude, accuracy } = position.coords;
+            const locationData = {
+              latitude,
+              longitude,
+              accuracy,
+              timestamp: position.timestamp
+            };
+            setLocation(locationData);
+            localStorage.setItem('userLocation', JSON.stringify(locationData));
+            setLoading(false);
+            setError(null);
+            resolve(locationData);
+          },
+          (error) => {
+            setLoading(false);
+            setError(error.message);
+            reject(error);
+          },
+          {
+            enableHighAccuracy: false,
+            timeout: 15000,
+            maximumAge: 600000 // 10 mins
+          }
+        );
+      });
     }
   }, [getCurrentLocation]);
 
-  // Set location manually (for testing or user input)
   const setLocationManually = useCallback((lat, lng) => {
     const locationData = {
       latitude: parseFloat(lat),
@@ -81,41 +133,51 @@ export function useLocation() {
       timestamp: Date.now()
     };
     setLocation(locationData);
+    localStorage.setItem('userLocation', JSON.stringify(locationData));
     setError(null);
     return locationData;
   }, []);
 
-  // Clear location
   const clearLocation = useCallback(() => {
     setLocation(null);
     setError(null);
+    localStorage.removeItem('userLocation');
   }, []);
 
-  // Check if location is available
   const isLocationAvailable = useCallback(() => {
-    return location !== null && location.latitude && location.longitude;
+    return (
+      location !== null &&
+      typeof location.latitude === 'number' &&
+      typeof location.longitude === 'number'
+    );
   }, [location]);
 
-  // Get location from localStorage on mount
   useEffect(() => {
+    checkPermission();
+
     const savedLocation = localStorage.getItem('userLocation');
     if (savedLocation) {
       try {
-        const parsedLocation = JSON.parse(savedLocation);
-        setLocation(parsedLocation);
-      } catch (error) {
-        console.error('Error parsing saved location:', error);
+        const parsed = JSON.parse(savedLocation);
+        const now = Date.now();
+
+        // Only use if it's recent and accurate enough
+        if (
+          parsed.latitude &&
+          parsed.longitude &&
+          (!desiredAccuracy || parsed.accuracy <= desiredAccuracy) &&
+          now - parsed.timestamp < maxAge
+        ) {
+          setLocation(parsed);
+        } else {
+          localStorage.removeItem('userLocation');
+        }
+      } catch (e) {
+        console.error('Error parsing location from localStorage:', e);
         localStorage.removeItem('userLocation');
       }
     }
-  }, []);
-
-  // Save location to localStorage when it changes
-  useEffect(() => {
-    if (location) {
-      localStorage.setItem('userLocation', JSON.stringify(location));
-    }
-  }, [location]);
+  }, [checkPermission, desiredAccuracy, maxAge]);
 
   return {
     location,
@@ -126,49 +188,6 @@ export function useLocation() {
     requestLocation,
     setLocationManually,
     clearLocation,
-    isLocationAvailable
-  };
-}
-
-// Hook for location-based API queries
-export function useLocationQuery() {
-  const { location, requestLocation, isLocationAvailable } = useLocation();
-
-  const queryWithLocation = useCallback(async (queryFn, options = {}) => {
-    const {
-      requireLocation = true,
-      maxDistance = 10000,
-      fallbackToGlobal = false,
-      authToken = null,
-      ...queryParams
-    } = options;
-
-    // If location is required but not available, try to get it
-    if (requireLocation && !isLocationAvailable()) {
-      try {
-        await requestLocation();
-      } catch (error) {
-        if (!fallbackToGlobal) {
-          throw new Error('Location is required but not available');
-        }
-      }
-    }
-
-    // Build query parameters
-    const params = new URLSearchParams(queryParams);
-    
-    if (isLocationAvailable()) {
-      params.append('latitude', location.latitude);
-      params.append('longitude', location.longitude);
-      params.append('maxDistance', maxDistance);
-    }
-
-    return queryFn(params.toString(), authToken);
-  }, [location, requestLocation, isLocationAvailable]);
-
-  return {
-    queryWithLocation,
-    location,
-    isLocationAvailable
+    isLocationAvailable,
   };
 }

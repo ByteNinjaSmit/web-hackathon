@@ -39,7 +39,7 @@ export const vendorApi = {
   // Get nearby vendors
   getNearbyVendors: async (params, authToken = null) => {
     const { latitude, longitude, maxDistance = 10, includeProducts = false } = params;
-    return apiRequest('/api/vendors/nearby', {
+    return apiRequest('/api/products', {
       method: 'GET',
       params: {
         latitude,
@@ -53,7 +53,7 @@ export const vendorApi = {
   // Get vendors with products
   getVendorsWithProducts: async (params, authToken = null) => {
     const { latitude, longitude, maxDistance = 10, category, search } = params;
-    return apiRequest('/api/vendors/with-products', {
+    return apiRequest('/api/products', {
       method: 'GET',
       params: {
         latitude,

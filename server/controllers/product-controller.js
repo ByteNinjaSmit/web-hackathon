@@ -1,3 +1,4 @@
+const Vendor = require("../database/models/vendor-model");
 const Product = require("../database/models/product-model");
 
 // Add new product (vendor)
@@ -33,7 +34,23 @@ const addProduct = async (req, res, next) => {
   }
 };
 
-// Get products (optionally by vendor)
+
+const calculateDistance = (lat1, lon1, lat2, lon2) => {
+  const toRad = value => (value * Math.PI) / 180;
+  const R = 6371000; // meters
+
+  const dLat = toRad(lat2 - lat1);
+  const dLon = toRad(lon2 - lon1);
+
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
+    Math.sin(dLon / 2) * Math.sin(dLon / 2);
+
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
+};
+
 const getProducts = async (req, res, next) => {
   try {
     const {
@@ -46,53 +63,65 @@ const getProducts = async (req, res, next) => {
       search,
       latitude,
       longitude,
-      maxDistance = 10000,
+      maxDistance = 100000,
     } = req.query;
-    
+
     const filter = { isDeleted: { $ne: true } };
+
     if (vendorId) filter.supplierId = vendorId;
     if (category) filter.category = category;
     if (isAvailable !== undefined) filter.isAvailable = isAvailable === "true";
     if (search) filter.name = { $regex: search, $options: "i" };
 
-    let products;
-    let total;
+    let products = [];
+    let total = 0;
 
-    // If location is provided, filter by nearby vendors
-    if (latitude && longitude) {
+    const useGeo = latitude && longitude;
+
+    if (useGeo) {
       const lat = parseFloat(latitude);
       const lng = parseFloat(longitude);
       const distance = parseFloat(maxDistance);
 
       if (isNaN(lat) || isNaN(lng) || isNaN(distance)) {
-        return res.status(400).json({ 
-          success: false, 
-          message: "Invalid coordinates or distance" 
+        return res.status(400).json({
+          success: false,
+          message: "Invalid latitude, longitude, or maxDistance",
         });
       }
 
-      // First find nearby vendors
-      const Vendor = require("../database/models/vendor-model");
-      const nearbyVendors = await Vendor.find({
-        location: {
-          $near: {
-            $geometry: {
-              type: "Point",
-              coordinates: [lng, lat]
-            },
-            $maxDistance: distance
-          }
-        },
-        isGoogleAccount: { $ne: true }
-      }).select('_id').lean();
+      // Step 1: Fetch all vendors with valid location
+      const allVendors = await Vendor.find({
+        "location.lat": { $ne: null },
+        "location.lng": { $ne: null },
+        // isVerified: true,
+        // isRejected: false,
+      }).select("_id location name businessName address").lean();
 
-      const vendorIds = nearbyVendors.map(vendor => vendor._id);
-      
-      // Then find products from these vendors
+      // Step 2: Manually calculate distance
+      const nearbyVendors = allVendors
+        .map((v) => {
+          const dist = calculateDistance(lat, lng, v.location.lat, v.location.lng);
+          return { ...v, distance: dist };
+        })
+        .filter((v) => v.distance <= distance);
+
+      const vendorIds = nearbyVendors.map(v => v._id);
+
+      if (vendorIds.length === 0) {
+        return res.json({
+          success: true,
+          products: [],
+          total: 0,
+          searchLocation: { latitude: lat, longitude: lng },
+        });
+      }
+
       filter.supplierId = { $in: vendorIds };
-      
+
+      // Step 3: Get Products
       products = await Product.find(filter)
-        .populate('supplierId', 'name businessName location address')
+        .populate("supplierId", "name businessName location address")
         .sort(sort)
         .skip(Number(skip))
         .limit(Number(limit))
@@ -100,53 +129,39 @@ const getProducts = async (req, res, next) => {
 
       total = await Product.countDocuments(filter);
 
-      // Calculate distance for each product
+      // Step 4: Add distance to each product
       products.forEach(product => {
-        if (product.supplierId && product.supplierId.location && product.supplierId.location.coordinates) {
-          const vendorLng = product.supplierId.location.coordinates[0];
-          const vendorLat = product.supplierId.location.coordinates[1];
-          product.distance = calculateDistance(lat, lng, vendorLat, vendorLng);
+        const vendor = nearbyVendors.find(v => v._id.toString() === product.supplierId?._id?.toString());
+        if (vendor) {
+          product.distance = vendor.distance;
         }
       });
 
-      // Sort by distance if location-based search
+      // Optional: Sort products by distance
       products.sort((a, b) => (a.distance || Infinity) - (b.distance || Infinity));
     } else {
-      // Regular product search without location
+      // No geo filter — just fetch normally
       products = await Product.find(filter)
-        .populate('supplierId', 'name businessName location address')
+        .populate("supplierId", "name businessName location address")
         .sort(sort)
         .skip(Number(skip))
         .limit(Number(limit))
         .lean();
-      
+
       total = await Product.countDocuments(filter);
     }
 
-    res.json({ 
-      success: true, 
-      products, 
+    return res.json({
+      success: true,
+      products,
       total,
-      searchLocation: latitude && longitude ? { latitude: parseFloat(latitude), longitude: parseFloat(longitude) } : null
+      searchLocation: useGeo ? { latitude: parseFloat(latitude), longitude: parseFloat(longitude) } : null,
     });
   } catch (error) {
+    console.error("getProducts error:", error);
     next(error);
   }
 };
-
-// Helper function to calculate distance between two points (Haversine formula)
-function calculateDistance(lat1, lon1, lat2, lon2) {
-  const R = 6371; // Radius of the Earth in kilometers
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLon = (lon2 - lon1) * Math.PI / 180;
-  const a = 
-    Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-    Math.sin(dLon/2) * Math.sin(dLon/2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-  const distance = R * c; // Distance in kilometers
-  return Math.round(distance * 1000); // Return in meters
-}
 
 // Update product (vendor)
 const updateProduct = async (req, res, next) => {

@@ -54,7 +54,6 @@ const StreetFoodDashboard = () => {
     setLoading(true);
     try {
       let data;
-      
       if (searchType === 'vendors') {
         data = await locationSearch.searchVendorsNearby({
           latitude: location.latitude,
@@ -104,6 +103,7 @@ const StreetFoodDashboard = () => {
   // Filter vendors/products based on search and category
   const filteredData = searchType === 'vendors' ? vendors : products;
 
+  // console.log(`Max Distance: `,maxDistance)
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
