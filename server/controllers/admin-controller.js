@@ -113,4 +113,5 @@ module.exports = {
   rejectVendor,
   getverifiedVendors,
   getRejectedVendors,
+  registerAdmin
 };
