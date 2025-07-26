@@ -500,6 +500,62 @@ const loginAdmin = async (req, res, next) => {
   }
 };
 
+// =============================
+// Update User Profile
+// =============================
+const updateUserProfile = async (req, res, next) => {
+  try {
+    const { name, phone, foodStallName, address, location, typeOfCuisine } = req.body;
+    
+    // Get user ID from the authenticated request
+    const userId = req.user?._id;
+    
+    if (!userId) {
+      return res.status(401).json({ message: "User not authenticated" });
+    }
+
+    // Find the user
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Update fields if provided
+    if (name !== undefined) user.name = name;
+    if (phone !== undefined) user.phone = phone;
+    if (foodStallName !== undefined) user.foodStallName = foodStallName;
+    if (address !== undefined) user.address = address;
+    if (location !== undefined) user.location = location;
+    if (typeOfCuisine !== undefined) user.typeOfCuisine = typeOfCuisine;
+
+    // Save the updated user
+    await user.save();
+
+    // Return updated user data
+    res.status(200).json({
+      message: "Profile updated successfully",
+      user: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        foodStallName: user.foodStallName,
+        address: user.address,
+        location: user.location,
+        typeOfCuisine: user.typeOfCuisine,
+        isGoogleAccount: user.isGoogleAccount,
+        isProfileComplete: checkUserProfileComplete(user),
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
+      }
+    });
+  } catch (error) {
+    logger.error("Update profile error", error);
+    next(error);
+  }
+};
+
 module.exports = {
   googleLogin,
   login,
@@ -509,5 +565,6 @@ module.exports = {
   googleLoginVendor,
   registerVendor,
   loginVendor,
-  loginAdmin
+  loginAdmin,
+  updateUserProfile
 };
