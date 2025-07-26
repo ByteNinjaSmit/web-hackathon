@@ -30,6 +30,7 @@ import VendorDashboardPage from "./pages/vendor/Vendor-Dashboard-Page";
 import StreetFoodDashboard from "./pages/client/StreetFoodDashboard";
 // import StreetFoodDashboard from "./components/StreetFoodDashboard";
 import SidebarMenuItem from "./pages/admin/layout";
+import { GoogleOAuthProvider } from "@react-oauth/google";
 
 // ProtectedRoute component
 const ProtectedRoute = ({ children }) => {
