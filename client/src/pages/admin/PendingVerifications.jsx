@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,66 +9,9 @@ import { Textarea } from "@/components/ui/textarea"
 import { Search, Eye, CheckCircle, XCircle, Clock, FileText, MapPin, Phone, Mail, Calendar } from "lucide-react"
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import axios from "axios"
+import { useAuth } from "@/store/auth"
 
-const pendingSuppliers = [
-  {
-    id: 1,
-    companyName: "Fresh Vegetables Co.",
-    contactPerson: "Rajesh Kumar",
-    email: "rajesh@freshveggies.com",
-    phone: "+91 98765 43210",
-    submittedDate: "2024-01-15",
-    status: "pending",
-    fssaiNumber: "FSSAI12345678901",
-    gstNumber: "GST123456789",
-    businessLicense: "BL2024001",
-    products: ["Tomatoes", "Onions", "Potatoes", "Carrots"],
-    supplyLocations: ["Mumbai", "Pune", "Nashik"],
-    documents: {
-      fssaiLicense: "/docs/fssai-fresh-vegetables.pdf",
-      businessLicense: "/docs/business-fresh-vegetables.pdf",
-      gstCertificate: "/docs/gst-fresh-vegetables.pdf",
-    },
-  },
-  {
-    id: 2,
-    companyName: "Spice Masters Ltd.",
-    contactPerson: "Priya Sharma",
-    email: "priya@spicemasters.com",
-    phone: "+91 87654 32109",
-    submittedDate: "2024-01-14",
-    status: "in-review",
-    fssaiNumber: "FSSAI98765432101",
-    gstNumber: "GST987654321",
-    businessLicense: "BL2024002",
-    products: ["Turmeric", "Red Chili", "Coriander", "Cumin"],
-    supplyLocations: ["Delhi", "Gurgaon", "Noida"],
-    documents: {
-      fssaiLicense: "/docs/fssai-spice-masters.pdf",
-      businessLicense: "/docs/business-spice-masters.pdf",
-      gstCertificate: "/docs/gst-spice-masters.pdf",
-    },
-  },
-  {
-    id: 3,
-    companyName: "Organic Oils Inc.",
-    contactPerson: "Amit Patel",
-    email: "amit@organicoils.com",
-    phone: "+91 76543 21098",
-    submittedDate: "2024-01-13",
-    status: "pending",
-    fssaiNumber: "FSSAI11223344556",
-    gstNumber: "GST112233445",
-    businessLicense: "BL2024003",
-    products: ["Coconut Oil", "Mustard Oil", "Sesame Oil"],
-    supplyLocations: ["Bangalore", "Chennai", "Hyderabad"],
-    documents: {
-      fssaiLicense: "/docs/fssai-organic-oils.pdf",
-      businessLicense: "/docs/business-organic-oils.pdf",
-      gstCertificate: "/docs/gst-organic-oils.pdf",
-    },
-  },
-]
 
 export default function PendingVerifications() {
   const [selectedSupplier, setSelectedSupplier] = useState(null)
@@ -78,6 +21,8 @@ export default function PendingVerifications() {
   const [rejectionReason, setRejectionReason] = useState("")
   const [actionFeedback, setActionFeedback] = useState(null)
   const [isProcessing, setIsProcessing] = useState(false)
+  const [pendingSuppliers, setpendingSuppliers] = useState([])
+  const { API } = useAuth()
 
   const filteredSuppliers = pendingSuppliers.filter((supplier) => {
     const matchesSearch =
@@ -86,6 +31,54 @@ export default function PendingVerifications() {
     const matchesStatus = statusFilter === "all" || supplier.status === statusFilter
     return matchesSearch && matchesStatus
   })
+
+  const fetchvendors = async () => {
+    try {
+      const response = await axios.get(`${API}/api/vendors/unverified-vendors`)
+      console.log("Fetched vendors:", response)
+      console.log("Response data:", response.data);
+
+      const data = await response.data;
+      if (!data.success) {
+        throw new Error(data.message || "Failed to fetch vendors");
+      }
+      return data.vendors;
+      // console.log("Vendors data:", data.vendors);
+    } catch (error) {
+      console.error("Error fetching vendors:", error)
+      return []
+    }
+  }
+
+  useEffect(() => {
+    const loadVendors = async () => {
+      const vendors = await fetchvendors();
+      console.log("Fetched vendors:", vendors);
+
+      if (vendors.length > 0) {
+        const mapped = vendors.map((vendor) => ({
+          id: vendor._id,
+          companyName: vendor.businessName,
+          contactPerson: vendor.name,
+          email: vendor.email,
+          phone: vendor.phone,
+          submittedDate: vendor?.createdAt?.split("T")[0],
+          status: vendor?.isVendor ? "approved" : "pending",
+          fssaiNumber: vendor?.fssaiNumber,
+          gstNumber: vendor?.gstNumber,
+          businessLicense: vendor?.businessLicense,
+          products: vendor?.products || [],
+          supplyLocations: vendor?.supplyLocations || [],
+        }));
+
+        setpendingSuppliers(mapped);
+      }
+    };
+
+    loadVendors();
+  }, []); // ✅ Dependency array to run only once on mount
+
+
 
   const handleApprove = async (supplierId) => {
     setIsProcessing(true)
@@ -114,8 +107,19 @@ export default function PendingVerifications() {
   const handleReject = async (supplierId, reason) => {
     setIsProcessing(true)
     try {
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
+       const res = await axios.post(
+        `http://localhost:5000/api/admin/reject`,
+        supplierId , reason , // this is the request body
+        {
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      const data = await res.data;
+      if (!data.success) {
+        throw new Error(data.message || "Failed to reject supplier");
+      }
+      
       setActionFeedback({
         type: "error",
         message: "Supplier has been rejected.",
@@ -195,13 +199,12 @@ export default function PendingVerifications() {
       {/* Action Feedback */}
       {actionFeedback && (
         <div
-          className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg border-l-4 ${
-            actionFeedback.type === "success"
-              ? "bg-green-50 border-green-500 text-green-800"
-              : actionFeedback.type === "error"
-                ? "bg-red-50 border-red-500 text-red-800"
-                : "bg-blue-50 border-blue-500 text-blue-800"
-          } animate-slide-up`}
+          className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg border-l-4 ${actionFeedback.type === "success"
+            ? "bg-green-50 border-green-500 text-green-800"
+            : actionFeedback.type === "error"
+              ? "bg-red-50 border-red-500 text-red-800"
+              : "bg-blue-50 border-blue-500 text-blue-800"
+            } animate-slide-up`}
         >
           <div className="flex items-center space-x-2">
             {actionFeedback.type === "success" && <CheckCircle className="h-5 w-5" />}
@@ -454,7 +457,7 @@ export default function PendingVerifications() {
 
                             <Dialog>
                               <DialogTrigger asChild>
-                                <Button variant="destructive" disabled={isProcessing} className="w-full sm:w-auto">
+                                <Button variant="destructive" disabled={isProcessing}  className="w-full sm:w-auto">
                                   <XCircle className="h-4 w-4 mr-2" />
                                   Reject
                                 </Button>
@@ -486,6 +489,7 @@ export default function PendingVerifications() {
                                       }}
                                       disabled={!rejectionReason.trim() || isProcessing}
                                       className="w-full sm:w-auto"
+                                      
                                     >
                                       {isProcessing ? (
                                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>

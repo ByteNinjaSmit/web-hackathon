@@ -194,4 +194,6 @@ const deleteProduct = async (req, res, next) => {
   }
 };
 
+
+
 module.exports = { addProduct, getProducts, updateProduct, deleteProduct };

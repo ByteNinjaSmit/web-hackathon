@@ -27,6 +27,7 @@ const productRouter = require("./routes/product-router");
 const orderRouter = require("./routes/order-router");
 const reviewRouter = require("./routes/review-router");
 const vendorRouter = require("./routes/vendor-router");
+const adminRouter = require("./routes/admin-routes");
 
 
 // Middleware
@@ -187,6 +188,7 @@ app.use("/api/auth", sensitiveEndpointsLimiter, authRouter);
 // Remaining Routes
 app.use("/api/auth", authRouter);
 app.use("/api/products", productRouter);
+app.use("/api/admin", adminRouter);
 app.use("/api/orders", orderRouter);
 app.use("/api/reviews", reviewRouter);
 app.use("/api/vendors", vendorRouter);
