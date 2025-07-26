@@ -26,6 +26,7 @@ const authRouter = require("./routes/auth-router");
 const productRouter = require("./routes/product-router");
 const orderRouter = require("./routes/order-router");
 const reviewRouter = require("./routes/review-router");
+const vendorRouter = require("./routes/vendor-router");
 
 
 // Middleware
@@ -186,6 +187,7 @@ app.use("/api/auth", authRouter);
 app.use("/api/products", productRouter);
 app.use("/api/orders", orderRouter);
 app.use("/api/reviews", reviewRouter);
+app.use("/api/vendors", vendorRouter);
 
 // Broadcaster
 app.set("io", io);
