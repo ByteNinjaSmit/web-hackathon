@@ -15,10 +15,16 @@ import ChatSupport from './pages/client/ChatSupport';
 import InventoryTracker from './pages/client/InventoryTracker';
 import ProfileManagement from './pages/client/ProfileManagement';
 import Favorites from "./pages/client/Faviourites";
-import VendorRegistrationPage from "./pages/vendor/Vendor-Registeration-Page";
+// Remove the old registration page import if you're no longer using it
+// import VendorRegistrationPage from "./pages/vendor/Vendor-Registeration-Page"; 
 import VendorLoginPage from "./pages/vendor/Vendor-Login-Page";
 import LocationBasedSearch from "./components/LocationBasedSearch";
 import { useAuth } from './store/auth';
+
+// 1. IMPORT YOUR NEW VENDOR REGISTRATION FORM
+// Make sure the path is correct for your project structure
+import VendorRegistrationForm from "./components/vendor/vendor-registration"; // Or wherever you saved it
+
 
 //admin pages import
 import Dashboard from "./pages/admin/Dashboard";
@@ -28,7 +34,6 @@ import RejectedSuppliers from "./pages/admin/RejectedSuppliers";
 import SupplierCommunication from "./pages/admin/SupplierCommunication";
 import VendorDashboardPage from "./pages/vendor/Vendor-Dashboard-Page";
 import StreetFoodDashboard from "./pages/client/StreetFoodDashboard";
-// import StreetFoodDashboard from "./components/StreetFoodDashboard";
 import SidebarMenuItem from "./pages/admin/layout";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import AdminLogin from "./pages/admin/Login";
@@ -52,7 +57,9 @@ const App = () => {
       <div className="app">
         {/* Routes */}
         <Routes>
-          <Route path="/vendor-register" element={<GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}><VendorRegistrationPage /></GoogleOAuthProvider>} />
+          {/* 2. UPDATE THE ELEMENT FOR THE /vendor-register ROUTE */}
+          <Route path="/vendor-register" element={<GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}><VendorRegistrationForm /></GoogleOAuthProvider>} />
+          
           <Route path="/vendor-login" element={<GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}><VendorLoginPage /></GoogleOAuthProvider>} />
 
           <Route path="/" element={<StreetFoodDashboard />} />
