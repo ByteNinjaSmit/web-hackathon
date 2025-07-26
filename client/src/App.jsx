@@ -1,5 +1,5 @@
 import React from "react";
-import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation, Navigate } from "react-router-dom";
 import './App.css'
 
 // Import main components
@@ -18,6 +18,7 @@ import Favorites from "./pages/client/Faviourites";
 import VendorRegistrationPage from "./pages/vendor/Vendor-Registeration-Page";
 import VendorLoginPage from "./pages/vendor/Vendor-Login-Page";
 import LocationBasedSearch from "./components/LocationBasedSearch";
+import { useAuth } from './store/auth';
 
 //admin pages import
 import Dashboard from "./pages/admin/Dashboard";
@@ -29,6 +30,14 @@ import VendorDashboardPage from "./pages/vendor/Vendor-Dashboard-Page";
 import StreetFoodDashboard from "./pages/client/StreetFoodDashboard";
 // import StreetFoodDashboard from "./components/StreetFoodDashboard";
 import SidebarMenuItem from "./pages/admin/layout";
+
+// ProtectedRoute component
+const ProtectedRoute = ({ children }) => {
+  const { isLoggedIn, isLoading } = useAuth();
+  if (isLoading) return <div>Loading...</div>;
+  if (!isLoggedIn) return <Navigate to="/login" replace />;
+  return children;
+};
 
 const App = () => {
   const location = useLocation();
@@ -47,13 +56,13 @@ const App = () => {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/otp-verification" element={<OTPVerification />} />
           <Route path="/marketplace" element={<VendorMarketplace />} />
-          <Route path="/cart" element={<Cart />} />
-          <Route path="/favorites" element={<Favorites />} />
-          <Route path="/orders" element={<OrderManagement />} />
-          <Route path="/payment" element={<PaymentIntegration />} />
-          <Route path="/chat" element={<ChatSupport />} />
-          <Route path="/inventory" element={<InventoryTracker />} />
-          <Route path="/profile" element={<ProfileManagement />} />
+          <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+          <Route path="/favorites" element={<ProtectedRoute><Favorites /></ProtectedRoute>} />
+          <Route path="/orders" element={<ProtectedRoute><OrderManagement /></ProtectedRoute>} />
+          <Route path="/payment" element={<ProtectedRoute><PaymentIntegration /></ProtectedRoute>} />
+          <Route path="/chat" element={<ProtectedRoute><ChatSupport /></ProtectedRoute>} />
+          <Route path="/inventory" element={<ProtectedRoute><InventoryTracker /></ProtectedRoute>} />
+          <Route path="/profile" element={<ProtectedRoute><ProfileManagement /></ProtectedRoute>} />
           <Route path="/location-search" element={<LocationBasedSearch />} />
 
           <Route path="/admin" element={<SidebarMenuItem />}>

@@ -1,9 +1,14 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, User, Mail, Phone, MapPin, Lock, Truck } from 'lucide-react';
+import { useAuth } from '../../store/auth';
+import axios from 'axios';
+import { toast } from 'sonner';
 
 const SignupForm = ({ onSwitchToLogin }) => {
   const [userType, setUserType] = useState('client'); // 'client', 'vendor'
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -17,6 +22,8 @@ const SignupForm = ({ onSwitchToLogin }) => {
     gstNumber: ''
   });
 
+  const { handleGoogleAuth, API } = useAuth();
+
   const handleInputChange = (e) => {
     setFormData({
       ...formData,
@@ -26,8 +33,56 @@ const SignupForm = ({ onSwitchToLogin }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle signup logic here
-    console.log('Signup submitted:', { userType, formData });
+    setLoading(true);
+    setError('');
+    if (formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match.');
+      setLoading(false);
+      return;
+    }
+    try {
+      const payload = {
+        name: `${formData.firstName} ${formData.lastName}`.trim(),
+        email: formData.email,
+        phone: formData.phone,
+        password: formData.password,
+        address: formData.address,
+        // Add more fields as needed for your backend
+      };
+      const response = await axios.post(`${API}/api/auth/register`, payload, { withCredentials: true });
+      if (response.data && response.data.user) {
+        toast.success('Signup successful! Please login.');
+        if (typeof onSwitchToLogin === 'function') {
+          onSwitchToLogin();
+        } else {
+          window.location.href = '/login';
+        }
+      } else {
+        setError('Invalid response from server.');
+        toast.error('Signup failed.');
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Signup failed.');
+      toast.error(err.response?.data?.message || 'Signup failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignup = () => {
+    const API = import.meta.env.VITE_APP_URI_API;
+    const url = userType === 'vendor'
+      ? `${API}/api/auth/google-login-vendor`
+      : `${API}/api/auth/google-login-user`;
+    const popup = window.open(url, 'googleSignup', 'width=500,height=600');
+    window.addEventListener('message', async (event) => {
+      if (!event.origin.startsWith(API)) return;
+      const { token, user } = event.data;
+      if (token) {
+        handleGoogleAuth(token, user);
+        window.location.reload();
+      }
+    }, { once: true });
   };
 
   return (
@@ -70,6 +125,16 @@ const SignupForm = ({ onSwitchToLogin }) => {
               <span>Raw Material Vendor</span>
             </button>
           </div>
+
+          {/* Google Signup Button */}
+          <button
+            type="button"
+            className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 rounded-lg py-2 mb-4 shadow hover:bg-gray-50"
+            onClick={handleGoogleSignup}
+          >
+            <img src="/google-icon.svg" alt="Google" className="h-5 w-5" />
+            Continue with Google
+          </button>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Name Fields */}
@@ -212,9 +277,11 @@ const SignupForm = ({ onSwitchToLogin }) => {
             <button
               type="submit"
               className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white py-3 px-4 rounded-lg font-medium hover:from-purple-700 hover:to-purple-800 transition-all transform hover:scale-105 mt-6"
+              disabled={loading}
             >
-              Create Account
+              {loading ? 'Creating Account...' : 'Create Account'}
             </button>
+            {error && <div className="text-red-600 text-sm mt-2">{error}</div>}
           </form>
 
           {/* Sign In Link */}

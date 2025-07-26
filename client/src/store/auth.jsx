@@ -11,7 +11,7 @@ const getTokenFromCookies = () => {
         .split("; ")
         .find((row) => row.startsWith("authToken="));
     return cookieValue ? cookieValue.split("=")[1] : null;
-};
+};  
 
 export const AuthProvider = ({ children }) => {
     const [token, setToken] = useState(getTokenFromCookies());
@@ -24,6 +24,10 @@ export const AuthProvider = ({ children }) => {
     // const navigate = useNavigate();
     const authorizationToken = `Bearer ${token}`;
     // const navigate = useNavigate();
+
+    // Add isGoogleAccount and isProfileComplete to state
+    const [isGoogleAccount, setIsGoogleAccount] = useState(false);
+    const [isProfileComplete, setIsProfileComplete] = useState(false);
 
     // Function to store token in cookies
     const storeTokenInCookies = (serverToken) => {
@@ -61,6 +65,36 @@ export const AuthProvider = ({ children }) => {
         }, 500);
     };
 
+    // Handle Google login (token and user info from popup)
+    const handleGoogleAuth = (token, user) => {
+        storeTokenInCookies(token);
+        setUser(user);
+        setIsGoogleAccount(user?.isGoogleAccount || false);
+        setIsProfileComplete(user?.isProfileComplete || false);
+    };
+
+    // Update profile (for profile completion)
+    const updateProfile = async (profileData) => {
+        try {
+            setIsLoading(true);
+            const response = await axios.put(`${API}/api/user/update-profile`, profileData, {
+                headers: { Authorization: authorizationToken },
+                withCredentials: true,
+            });
+            if (response.status === 200) {
+                setUser(response.data.user);
+                setIsProfileComplete(response.data.user.isProfileComplete);
+                toast.success('Profile updated successfully!');
+            } else {
+                toast.error('Failed to update profile.');
+            }
+        } catch (error) {
+            toast.error('Profile update error.');
+        } finally {
+            setIsLoading(false);
+        }
+    };
+
     // JWT Authentication - fetch current logged-in user data
     const userAuthentication = async () => {
         if (!token) return;
@@ -74,7 +108,6 @@ export const AuthProvider = ({ children }) => {
             });
             if (response.status == 200) {
                 const data = response.data;
-                // console.log('data: ',data)
                 setUser(data.user);
 
             } else {
@@ -117,9 +150,6 @@ export const AuthProvider = ({ children }) => {
             }
         }
     }, [user]);
-
-
-
     return (
         <AuthContext.Provider
             value={{
@@ -131,9 +161,13 @@ export const AuthProvider = ({ children }) => {
                 isLoading,
                 isAdmin,
                 isDeveloper,
-                API,
                 isUser,
                 isVendor,
+                API,
+                isGoogleAccount,
+                isProfileComplete,
+                handleGoogleAuth,
+                updateProfile,
             }}
         >
             {children}

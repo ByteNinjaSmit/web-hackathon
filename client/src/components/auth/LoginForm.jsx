@@ -1,10 +1,15 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, User, Mail, Phone, MapPin, Lock, ArrowLeft, Truck} from 'lucide-react';
+import { useAuth } from '../../store/auth';
+import axios from 'axios';
+import { toast } from 'sonner';
 
 const AuthForms = () => {
   const [currentForm, setCurrentForm] = useState('login'); // 'login', 'signup', 'forgot'
   const [userType, setUserType] = useState('client'); // 'client', 'vendor'
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -18,6 +23,8 @@ const AuthForms = () => {
     gstNumber: ''
   });
 
+  const { handleGoogleAuth, API } = useAuth();
+
   const handleInputChange = (e) => {
     setFormData({
       ...formData,
@@ -27,8 +34,43 @@ const AuthForms = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle form submission logic here
-    console.log('Form submitted:', { userType, formData, formType: currentForm });
+    setLoading(true);
+    setError('');
+    try {
+      const response = await axios.post(`${API}/api/auth/login`, {
+        email: formData.email,
+        password: formData.password,
+      }, { withCredentials: true });
+      if (response.data && response.data.token && response.data.user) {
+        handleGoogleAuth(response.data.token, response.data.user);
+        toast.success('Login successful!');
+        window.location.reload();
+      } else {
+        setError('Invalid response from server.');
+        toast.error('Login failed.');
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || 'Login failed.');
+      toast.error(err.response?.data?.message || 'Login failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleLogin = () => {
+    const API = import.meta.env.VITE_APP_URI_API;
+    const url = userType === 'vendor'
+      ? `${API}/api/auth/google-login-vendor`
+      : `${API}/api/auth/google-login-user`;
+    const popup = window.open(url, 'googleLogin', 'width=500,height=600');
+    window.addEventListener('message', async (event) => {
+      if (!event.origin.startsWith(API)) return;
+      const { token, user } = event.data;
+      if (token) {
+        handleGoogleAuth(token, user);
+        window.location.reload();
+      }
+    }, { once: true });
   };
 
   const LoginForm = () => (
@@ -43,6 +85,16 @@ const AuthForms = () => {
             <h2 className="text-3xl font-bold text-gray-900 mb-2">Welcome Back</h2>
             <p className="text-gray-600">Sign in to your account</p>
           </div>
+
+          {/* Google Login Button */}
+          <button
+            type="button"
+            className="w-full flex items-center justify-center gap-2 bg-white border border-gray-300 rounded-lg py-2 mb-4 shadow hover:bg-gray-50"
+            onClick={handleGoogleLogin}
+          >
+            <img src="/google-icon.svg" alt="Google" className="h-5 w-5" />
+            Continue with Google
+          </button>
 
           {/* User Type Selection */}
           <div className="flex bg-gray-100 rounded-lg p-1 mb-6">
@@ -129,9 +181,11 @@ const AuthForms = () => {
             <button
               onClick={handleSubmit}
               className="w-full bg-gradient-to-r from-purple-600 to-purple-700 text-white py-3 px-4 rounded-lg font-medium hover:from-purple-700 hover:to-purple-800 transition-all transform hover:scale-105"
+              disabled={loading}
             >
-              Sign In
+              {loading ? 'Signing In...' : 'Sign In'}
             </button>
+            {error && <div className="text-red-600 text-sm mt-2">{error}</div>}
           </div>
 
           {/* Sign Up Link */}
