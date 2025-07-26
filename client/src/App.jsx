@@ -31,6 +31,9 @@ import StreetFoodDashboard from "./pages/client/StreetFoodDashboard";
 // import StreetFoodDashboard from "./components/StreetFoodDashboard";
 import SidebarMenuItem from "./pages/admin/layout";
 import { GoogleOAuthProvider } from "@react-oauth/google";
+import AdminLogin from "./pages/admin/Login";
+import AdminProfile from "./pages/admin/Profile";
+import UserManagement from "./pages/admin/Users";
 
 // ProtectedRoute component
 const ProtectedRoute = ({ children }) => {
