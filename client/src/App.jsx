@@ -5,16 +5,16 @@ import './App.css'
 // Import main components
 import Login from './components/auth/LoginForm';
 import Signup from './components/auth/SignupForm';
-import ForgotPassword from './components/ForgotPassword';
-import OTPVerification from './components/OTPVerification';
-import VendorMarketplace from './components/VendorMarketplace';
-import Cart from './components/Cart';
-import OrderManagement from './components/OrderManagement';
-import PaymentIntegration from './components/PaymentIntegration';
-import ChatSupport from './components/ChatSupport';
-import InventoryTracker from './components/InventoryTracker';
-import ProfileManagement from './components/ProfileManagement';
-import Favorites from "./components/Faviourites";
+import ForgotPassword from './pages/client/ForgotPassword';
+import OTPVerification from './pages/client/OTPVerification';
+import VendorMarketplace from './pages/client/VendorMarketplace';
+import Cart from './pages/client/Cart';
+import OrderManagement from './pages/client/OrderManagement';
+import PaymentIntegration from './pages/client/PaymentIntegration';
+import ChatSupport from './pages/client/ChatSupport';
+import InventoryTracker from './pages/client/InventoryTracker';
+import ProfileManagement from './pages/client/ProfileManagement';
+import Favorites from "./pages/client/Faviourites";
 import VendorRegistrationPage from "./pages/vendor/Vendor-Registeration-Page";
 import VendorLoginPage from "./pages/vendor/Vendor-Login-Page";
 
@@ -26,7 +26,7 @@ import ApprovedSuppliers from "./pages/admin/ApprovedSuppliers";
 import RejectedSuppliers from "./pages/admin/RejectedSuppliers";
 import SupplierCommunication from "./pages/admin/SupplierCommunication";
 import VendorDashboardPage from "./pages/vendor/Vendor-Dashboard-Page";
-import StreetFoodDashboard from "./components/StreetFoodDashboard";
+import StreetFoodDashboard from "./pages/client/StreetFoodDashboard";
 
 const App = () => {
   const location = useLocation();

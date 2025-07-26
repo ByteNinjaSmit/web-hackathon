@@ -1,8 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Star, MapPin, Clock, Phone, Package } from 'lucide-react';
+import VendorMenu from './VendorMenu';
 
-const VendorCard = ({ vendor }) => (
-  <div className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
+const VendorCard = ({ vendor }) => {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  return (
+    <>
+      {isMenuOpen && <VendorMenu vendor={vendor} onClose={() => setIsMenuOpen(false)} />}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
     <div className="p-4">
       {/* Vendor Header */}
       <div className="flex items-start justify-between mb-3">
@@ -52,7 +57,10 @@ const VendorCard = ({ vendor }) => (
       </div>
       {/* Action Buttons */}
       <div className="flex space-x-2">
-        <button className="flex-1 bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors">
+        <button 
+          onClick={() => setIsMenuOpen(true)}
+          className="flex-1 bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors"
+        >
           View Menu
         </button>
         <button className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
@@ -60,7 +68,9 @@ const VendorCard = ({ vendor }) => (
         </button>
       </div>
     </div>
-  </div>
-);
+      </div>
+    </>
+  );
+};
 
-export default VendorCard; 
+export default VendorCard;

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import Header from './layout/Header';
-import HeroSection from './layout/HeroSection';
+import Header from '../../components/layout/Header';
+import HeroSection from '../../components/layout/HeroSection';
 import CategoryList from './CategoryList';
 import VendorList from './VendorList';
 import QuickActions from './QuickActions';
