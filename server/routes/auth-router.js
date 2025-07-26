@@ -20,5 +20,7 @@ router.get("/current-user",authController.getCurrentUser)
 
 // User Profile Update (requires authentication)
 router.put("/user/update-profile", authMiddleware, authController.updateUserProfile);
+// Update Vendor Profile
+router.put("/vendor/complete-profile", authMiddleware, authController.updateVendorProfile);
 
 module.exports = router;

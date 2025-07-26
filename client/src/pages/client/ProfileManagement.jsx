@@ -605,38 +605,69 @@ const Profile = () => {
                     </div>
                     
                     {/* Location Coordinates */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Latitude</label>
-                        {isEditing ? (
-                          <input
-                            type="number"
-                            step="any"
-                            value={userInfo.location.lat || ''}
-                            onChange={(e) => handleInputChange('location.lat', parseFloat(e.target.value) || null)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            placeholder="e.g., 18.5204"
-                          />
-                        ) : (
-                          <p className="text-gray-900">{userInfo.location.lat || 'Not set'}</p>
-                        )}
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Latitude</label>
+                          {isEditing ? (
+                            <input
+                              type="number"
+                              step="any"
+                              value={userInfo.location.lat || ''}
+                              onChange={(e) => handleInputChange('location.lat', parseFloat(e.target.value) || null)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                              placeholder="e.g., 18.5204"
+                            />
+                          ) : (
+                            <p className="text-gray-900">{userInfo.location.lat || 'Not set'}</p>
+                          )}
+                        </div>
+                        
+                        <div>
+                          <label className="block text-sm font-medium text-gray-700 mb-2">Longitude</label>
+                          {isEditing ? (
+                            <input
+                              type="number"
+                              step="any"
+                              value={userInfo.location.lng || ''}
+                              onChange={(e) => handleInputChange('location.lng', parseFloat(e.target.value) || null)}
+                              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                              placeholder="e.g., 73.8567"
+                            />
+                          ) : (
+                            <p className="text-gray-900">{userInfo.location.lng || 'Not set'}</p>
+                          )}
+                        </div>
                       </div>
                       
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 mb-2">Longitude</label>
-                        {isEditing ? (
-                          <input
-                            type="number"
-                            step="any"
-                            value={userInfo.location.lng || ''}
-                            onChange={(e) => handleInputChange('location.lng', parseFloat(e.target.value) || null)}
-                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                            placeholder="e.g., 73.8567"
-                          />
-                        ) : (
-                          <p className="text-gray-900">{userInfo.location.lng || 'Not set'}</p>
-                        )}
-                      </div>
+                      {isEditing && (
+                        <div className="flex justify-start">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (navigator.geolocation) {
+                                navigator.geolocation.getCurrentPosition(
+                                  (position) => {
+                                    const { latitude, longitude } = position.coords;
+                                    handleInputChange('location.lat', latitude);
+                                    handleInputChange('location.lng', longitude);
+                                  },
+                                  (error) => {
+                                    console.error('Error getting location:', error);
+                                    alert('Unable to get your location. Please check your browser permissions.');
+                                  }
+                                );
+                              } else {
+                                alert('Geolocation is not supported by your browser.');
+                              }
+                            }}
+                            className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 transition-colors"
+                          >
+                            <MapPin className="h-4 w-4" />
+                            <span>Get Current Location</span>
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>

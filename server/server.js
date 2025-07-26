@@ -124,7 +124,7 @@ app.use((req, res, next) => {
 //Ip based rate limiting for sensitive endpoints
 const sensitiveEndpointsLimiter = rateLimit({
     windowMs: 30 * 1000,
-    max: 10,
+    max: 100,
     standardHeaders: true,
     legacyHeaders: false,
     keyGenerator: rateLimit.ipKeyGenerator, // ✅ Correct and safe
