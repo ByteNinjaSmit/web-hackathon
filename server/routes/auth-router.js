@@ -11,6 +11,7 @@ router.post("/login", authController.login);
 router.post("/register", authController.register);
 
 // Vendor Auth
+router.get("/vendor-google", authController.vendorGoogleLogin);    // Using Token Code
 router.post("/google-login-vendor", authController.googleLoginVendor);
 router.post("/vendor/login", authController.loginVendor);
 router.post("/vendor/register", authController.registerVendor);
