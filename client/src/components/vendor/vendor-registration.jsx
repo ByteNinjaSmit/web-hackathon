@@ -98,7 +98,11 @@ export default function VendorRegistrationForm() {
                             phone: formData.phone || "",
                             businessName: formData.businessName || "",
                             address: formData.address || {},
-                            location: formData.location || {}
+                            // Fix: Properly format location as GeoJSON
+                            location: {
+                                type: "Point",
+                                coordinates: formData.location?.coordinates || [0, 0] // Default coordinates if none provided
+                            }
                         }
                     );
                     
@@ -111,7 +115,13 @@ export default function VendorRegistrationForm() {
             }
         } catch (error) {
             console.error("Google registration error:", error);
-            toast.error("Error in registering, Please Try Again!");
+            // Add more detailed error logging
+            if (error.response) {
+                console.error("Error response:", error.response.data);
+                toast.error(error.response.data.message || "Error in registering, Please Try Again!");
+            } else {
+                toast.error("Error in registering, Please Try Again!");
+            }
         }
     };
 
