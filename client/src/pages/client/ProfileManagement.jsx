@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 import { useAuth } from '../../store/auth';
 
 const Profile = () => {
-  const { user, isGoogleAccount, isProfileComplete, updateProfile, isLoading } = useAuth();
+  const { user, isGoogleAccount, isProfileComplete, updateProfile, isLoading, LogoutUser } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
@@ -15,10 +15,19 @@ const Profile = () => {
     name: '',
     email: '',
     phone: '',
-    businessName: '',
-    address: '',
-    businessType: '',
-    gst: '',
+    foodStallName: '',
+    address: {
+      street: '',
+      city: '',
+      state: '',
+      zipCode: '',
+      country: ''
+    },
+    typeOfCuisine: '',
+    location: {
+      lat: null,
+      lng: null
+    },
     joinDate: ''
   });
 
@@ -28,11 +37,20 @@ const Profile = () => {
         name: user.name || '',
         email: user.email || '',
         phone: user.phone || '',
-        businessName: user.businessName || '',
-        address: user.address?.street || user.address || '',
-        businessType: user.businessType || '',
-        gst: user.gstNumber || '',
-        joinDate: user.joinDate || user.createdAt || '',
+        foodStallName: user.foodStallName || '',
+        address: user.address || {
+          street: '',
+          city: '',
+          state: '',
+          zipCode: '',
+          country: ''
+        },
+        typeOfCuisine: user.typeOfCuisine || '',
+        location: user.location || {
+          lat: null,
+          lng: null
+        },
+        joinDate: user.createdAt || '',
       });
     }
     if (isGoogleAccount && !isProfileComplete) {
@@ -209,19 +227,35 @@ const Profile = () => {
     await updateProfile({
       name: userInfo.name,
       phone: userInfo.phone,
-      businessName: userInfo.businessName,
+      foodStallName: userInfo.foodStallName,
       address: userInfo.address,
-      businessType: userInfo.businessType,
-      gstNumber: userInfo.gst,
+      location: userInfo.location,
+      typeOfCuisine: userInfo.typeOfCuisine,
     });
     setShowCompletePrompt(false);
   };
 
   const handleInputChange = (field, value) => {
-    setUserInfo(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    if (field.includes('.')) {
+      // Handle nested fields like address.street
+      const [parent, child] = field.split('.');
+      setUserInfo(prev => ({
+        ...prev,
+        [parent]: {
+          ...prev[parent],
+          [child]: value
+        }
+      }));
+    } else {
+      setUserInfo(prev => ({
+        ...prev,
+        [field]: value
+      }));
+    }
+  };
+
+  const handleLogout = () => {
+    LogoutUser();
   };
 
   const tabs = [
@@ -327,7 +361,7 @@ const Profile = () => {
             {/* User Info */}
             <div className="flex-1">
               <h2 className="text-3xl font-bold mb-1">{userInfo.name}</h2>
-              <p className="text-purple-100 mb-2">{userInfo.businessName}</p>
+              <p className="text-purple-100 mb-2">{userInfo.foodStallName}</p>
               <p className="text-purple-200 text-sm">Member since {new Date(userInfo.joinDate).toLocaleDateString()}</p>
             </div>
 
@@ -400,7 +434,10 @@ const Profile = () => {
                 })}
                 
                 {/* Logout */}
-                <button className="w-full flex items-center space-x-3 px-6 py-4 text-left text-red-600 hover:bg-red-50 transition-colors">
+                <button 
+                  onClick={handleLogout}
+                  className="w-full flex items-center space-x-3 px-6 py-4 text-left text-red-600 hover:bg-red-50 transition-colors"
+                >
                   <LogOut className="h-5 w-5" />
                   <span className="font-medium">Logout</span>
                 </button>
@@ -428,7 +465,7 @@ const Profile = () => {
                   {/* Personal Information */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Full Name <span className="text-red-500">*</span></label>
                       {isEditing ? (
                         <input
                           type="text"
@@ -468,21 +505,24 @@ const Profile = () => {
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Business Type</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Type of Cuisine</label>
                       {isEditing ? (
                         <select
-                          value={userInfo.businessType}
-                          onChange={(e) => handleInputChange('businessType', e.target.value)}
+                          value={userInfo.typeOfCuisine}
+                          onChange={(e) => handleInputChange('typeOfCuisine', e.target.value)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                         >
-                          <option value="">Select</option>
-                          <option>Street Food Vendor</option>
-                          <option>Restaurant</option>
-                          <option>Cafe</option>
-                          <option>Catering Service</option>
+                          <option value="">Select Cuisine Type</option>
+                          <option value="Indian">Indian</option>
+                          <option value="Chinese">Chinese</option>
+                          <option value="Italian">Italian</option>
+                          <option value="Mexican">Mexican</option>
+                          <option value="Thai">Thai</option>
+                          <option value="American">American</option>
+                          <option value="Other">Other</option>
                         </select>
                       ) : (
-                        <p className="text-gray-900">{userInfo.businessType}</p>
+                        <p className="text-gray-900">{userInfo.typeOfCuisine}</p>
                       )}
                     </div>
                   </div>
@@ -490,44 +530,113 @@ const Profile = () => {
                   {/* Business Information */}
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Business Name</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Food Stall Name <span className="text-red-500">*</span></label>
                       {isEditing ? (
                         <input
                           type="text"
-                          value={userInfo.businessName}
-                          onChange={(e) => handleInputChange('businessName', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        />
-                      ) : (
-                        <p className="text-gray-900">{userInfo.businessName}</p>
-                      )}
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Address <span className="text-red-500">*</span></label>
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={userInfo.address}
-                          onChange={(e) => handleInputChange('address', e.target.value)}
+                          value={userInfo.foodStallName}
+                          onChange={(e) => handleInputChange('foodStallName', e.target.value)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                           required
                         />
                       ) : (
-                        <p className="text-gray-900">{userInfo.address}</p>
+                        <p className="text-gray-900">{userInfo.foodStallName}</p>
                       )}
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">GST Number</label>
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={userInfo.gst}
-                          onChange={(e) => handleInputChange('gst', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        />
-                      ) : (
-                        <p className="text-gray-900">{userInfo.gst}</p>
-                      )}
+                    
+                    {/* Address Fields */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Street Address <span className="text-red-500">*</span></label>
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            value={userInfo.address.street}
+                            onChange={(e) => handleInputChange('address.street', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            required
+                          />
+                        ) : (
+                          <p className="text-gray-900">{userInfo.address.street}</p>
+                        )}
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">City</label>
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            value={userInfo.address.city}
+                            onChange={(e) => handleInputChange('address.city', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          />
+                        ) : (
+                          <p className="text-gray-900">{userInfo.address.city}</p>
+                        )}
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">State</label>
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            value={userInfo.address.state}
+                            onChange={(e) => handleInputChange('address.state', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          />
+                        ) : (
+                          <p className="text-gray-900">{userInfo.address.state}</p>
+                        )}
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">ZIP Code</label>
+                        {isEditing ? (
+                          <input
+                            type="text"
+                            value={userInfo.address.zipCode}
+                            onChange={(e) => handleInputChange('address.zipCode', e.target.value)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          />
+                        ) : (
+                          <p className="text-gray-900">{userInfo.address.zipCode}</p>
+                        )}
+                      </div>
+                    </div>
+                    
+                    {/* Location Coordinates */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Latitude</label>
+                        {isEditing ? (
+                          <input
+                            type="number"
+                            step="any"
+                            value={userInfo.location.lat || ''}
+                            onChange={(e) => handleInputChange('location.lat', parseFloat(e.target.value) || null)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            placeholder="e.g., 18.5204"
+                          />
+                        ) : (
+                          <p className="text-gray-900">{userInfo.location.lat || 'Not set'}</p>
+                        )}
+                      </div>
+                      
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">Longitude</label>
+                        {isEditing ? (
+                          <input
+                            type="number"
+                            step="any"
+                            value={userInfo.location.lng || ''}
+                            onChange={(e) => handleInputChange('location.lng', parseFloat(e.target.value) || null)}
+                            className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                            placeholder="e.g., 73.8567"
+                          />
+                        ) : (
+                          <p className="text-gray-900">{userInfo.location.lng || 'Not set'}</p>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>

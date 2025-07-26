@@ -77,7 +77,7 @@ export const AuthProvider = ({ children }) => {
     const updateProfile = async (profileData) => {
         try {
             setIsLoading(true);
-            const response = await axios.put(`${API}/api/user/update-profile`, profileData, {
+            const response = await axios.put(`${API}/api/auth/user/update-profile`, profileData, {
                 headers: { Authorization: authorizationToken },
                 withCredentials: true,
             });
@@ -89,7 +89,8 @@ export const AuthProvider = ({ children }) => {
                 toast.error('Failed to update profile.');
             }
         } catch (error) {
-            toast.error('Profile update error.');
+            console.error('Profile update error:', error);
+            toast.error(error.response?.data?.message || 'Profile update error.');
         } finally {
             setIsLoading(false);
         }
