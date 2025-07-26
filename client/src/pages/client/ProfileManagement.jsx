@@ -1,23 +1,45 @@
-import React, { useState } from 'react';
-import { Search, MapPin, Star, Clock, Phone, ShoppingCart, Bell, User, Menu, X, Truck, Edit3, Save, Camera, Package, Heart, CreditCard, Settings, LogOut, Shield, Calendar, AlertCircle, CheckCircle, Trash2, Plus, ChevronRight, Eye } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Search, MapPin, Star, Clock, Phone, ShoppingCart, Bell, User, Menu, X, Truck, Edit3, Save, Camera, Package, Heart, CreditCard, Settings, LogOut, Shield, Calendar, AlertCircle, CheckCircle, Trash2, Plus, ChevronRight, Eye, RotateCcw } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { useAuth } from '../../store/auth';
 
 const Profile = () => {
+  const { user, isGoogleAccount, isProfileComplete, updateProfile, isLoading } = useAuth();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
   const [activePaymentTab, setActivePaymentTab] = useState('cards');
   const [activeSettingsTab, setActiveSettingsTab] = useState('account');
+  const [showCompletePrompt, setShowCompletePrompt] = useState(false);
   const [userInfo, setUserInfo] = useState({
-    name: 'Testing_User Mahesh',
-    email: 'mahesh@test.com',
-    phone: '+91 12345 67890',
-    businessName: 'Kullad Pizza',
-    address: 'Shop 15, Main Market, Sector 18, Pune',
-    businessType: 'Street Food Vendor',
-    gst: 'GST123456789',
-    joinDate: '2024-03-15'
+    name: '',
+    email: '',
+    phone: '',
+    businessName: '',
+    address: '',
+    businessType: '',
+    gst: '',
+    joinDate: ''
   });
+
+  useEffect(() => {
+    if (user) {
+      setUserInfo({
+        name: user.name || '',
+        email: user.email || '',
+        phone: user.phone || '',
+        businessName: user.businessName || '',
+        address: user.address?.street || user.address || '',
+        businessType: user.businessType || '',
+        gst: user.gstNumber || '',
+        joinDate: user.joinDate || user.createdAt || '',
+      });
+    }
+    if (isGoogleAccount && !isProfileComplete) {
+      setShowCompletePrompt(true);
+      setIsEditing(true);
+    }
+  }, [user, isGoogleAccount, isProfileComplete]);
 
   // User stats
   const stats = {
@@ -182,10 +204,17 @@ const Profile = () => {
     }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setIsEditing(false);
-    // Handle save logic here
-
+    await updateProfile({
+      name: userInfo.name,
+      phone: userInfo.phone,
+      businessName: userInfo.businessName,
+      address: userInfo.address,
+      businessType: userInfo.businessType,
+      gstNumber: userInfo.gst,
+    });
+    setShowCompletePrompt(false);
   };
 
   const handleInputChange = (field, value) => {
@@ -205,6 +234,21 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Profile Completion Prompt */}
+      {showCompletePrompt && (
+        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+          <div className="bg-white rounded-xl shadow-lg p-8 max-w-md w-full text-center">
+            <h2 className="text-2xl font-bold mb-2 text-purple-700">Complete Your Profile</h2>
+            <p className="mb-4 text-gray-600">To continue using your account, please fill in the required information below.</p>
+            <button
+              className="bg-purple-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-purple-700 mb-2"
+              onClick={() => setIsEditing(true)}
+            >
+              Complete Profile
+            </button>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <header className="bg-white shadow-sm border-b border-purple-100">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -373,9 +417,10 @@ const Profile = () => {
                   <button
                     onClick={() => isEditing ? handleSave() : setIsEditing(true)}
                     className="flex items-center space-x-2 text-purple-600 hover:text-purple-700"
+                    disabled={isLoading}
                   >
                     {isEditing ? <Save className="h-4 w-4" /> : <Edit3 className="h-4 w-4" />}
-                    <span>{isEditing ? 'Save' : 'Edit'}</span>
+                    <span>{isEditing ? (isLoading ? 'Saving...' : 'Save') : 'Edit'}</span>
                   </button>
                 </div>
 
@@ -390,6 +435,7 @@ const Profile = () => {
                           value={userInfo.name}
                           onChange={(e) => handleInputChange('name', e.target.value)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          required
                         />
                       ) : (
                         <p className="text-gray-900">{userInfo.name}</p>
@@ -398,26 +444,23 @@ const Profile = () => {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
-                      {isEditing ? (
-                        <input
-                          type="email"
-                          value={userInfo.email}
-                          onChange={(e) => handleInputChange('email', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        />
-                      ) : (
-                        <p className="text-gray-900">{userInfo.email}</p>
-                      )}
+                      <input
+                        type="email"
+                        value={userInfo.email}
+                        disabled
+                        className="w-full px-3 py-2 border border-gray-200 rounded-lg bg-gray-100 text-gray-500"
+                      />
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Phone Number <span className="text-red-500">*</span></label>
                       {isEditing ? (
                         <input
                           type="tel"
                           value={userInfo.phone}
                           onChange={(e) => handleInputChange('phone', e.target.value)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          required
                         />
                       ) : (
                         <p className="text-gray-900">{userInfo.phone}</p>
@@ -432,6 +475,7 @@ const Profile = () => {
                           onChange={(e) => handleInputChange('businessType', e.target.value)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                         >
+                          <option value="">Select</option>
                           <option>Street Food Vendor</option>
                           <option>Restaurant</option>
                           <option>Cafe</option>
@@ -459,13 +503,14 @@ const Profile = () => {
                       )}
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">Address</label>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">Address <span className="text-red-500">*</span></label>
                       {isEditing ? (
                         <input
                           type="text"
                           value={userInfo.address}
                           onChange={(e) => handleInputChange('address', e.target.value)}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                          required
                         />
                       ) : (
                         <p className="text-gray-900">{userInfo.address}</p>
