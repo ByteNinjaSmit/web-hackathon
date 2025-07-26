@@ -111,7 +111,7 @@ const login = async (req, res, next) => {
       secure: process.env.NODE_ENV === "production", // Only send over HTTPS in production
       sameSite: "strict", // Helps prevent CSRF attacks
   });
-  
+
     return res.status(200).json({
       message: "Login successful",
       token,
@@ -392,44 +392,55 @@ const loginVendor = async (req, res, next) => {
 
 const getCurrentUser = async (req, res, next) => {
   try {
-    const token = req.cookies?.authToken;
+      const token = req.cookies?.authToken;
 
-    if (!token) {
-      return res
-        .status(401)
-        .json({ message: "Unauthorized: No token provided" });
-    }
+      if (!token) {
+          return res.status(401).json({ message: "Unauthorized: No token provided" });
+      }
 
-    // Verify and decode token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-    const { userID, role } = decoded;
+      // Verify and decode token
+      const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+      const { userID, role } = decoded;
 
-    // Validate role and model mapping
-    const roleModelMap = {
-      user: User,
-      admin: Admin,
-      vendor: Vendor,
-    };
+      // ✅ ADD THIS CHECK: Ensure the token payload is valid
+      if (!userID || !role) {
+          return res.status(401).json({ message: "Unauthorized: Invalid token payload" });
+      }
 
-    const model = roleModelMap[role];
+      // Validate role and model mapping
+      const roleModelMap = {
+          user: User,
+          admin: Admin,
+          vendor: Vendor,
+      };
+      const model = roleModelMap[role];
 
-    if (!model) {
-      return res.status(400).json({ message: "Invalid user role in token" });
-    }
+      if (!model) {
+          return res.status(400).json({ message: "Invalid user role in token" });
+      }
 
-    // Fetch user
-    const userData = await model.findById(userID).select("-password");
+      // Fetch user
+      const userData = await model.findById(userID).select("-password");
 
-    if (!userData) {
-      return res.status(404).json({ message: "User not found" });
-    }
+      if (!userData) {
+          return res.status(404).json({ message: "User not found" });
+      }
 
-    return res.status(200).json({
-      user: userData,
-    });
+      return res.status(200).json({
+          user: userData,
+      });
   } catch (error) {
-    console.error("Error fetching current user:", error);
-    next(error);
+      // ✅ ENHANCED CATCH BLOCK
+      if (error.name === 'TokenExpiredError') {
+          return res.status(401).json({ message: 'Unauthorized: Token has expired' });
+      }
+      if (error.name === 'JsonWebTokenError') {
+          return res.status(401).json({ message: 'Unauthorized: Invalid token' });
+      }
+      
+      // For other types of errors
+      console.error("Error fetching current user:", error);
+      next(error);
   }
 };
 
