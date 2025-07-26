@@ -41,18 +41,21 @@ const ProtectedRoute = ({ children }) => {
 
 const App = () => {
   const location = useLocation();
+  const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
   return (
     <>
       <div className="app">
         {/* Routes */}
         <Routes>
-          <Route path="/vendor-register" element={<VendorRegistrationPage />} />
-          <Route path="/vendor-Login" element={<VendorLoginPage />} />
+          <Route path="/vendor-register" element={<GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}><VendorRegistrationPage /></GoogleOAuthProvider>} />
+          <Route path="/vendor-Login" element={<GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}><VendorLoginPage /></GoogleOAuthProvider>} />
+
           <Route path="/" element={<StreetFoodDashboard />} />
           <Route path="/home" element={<StreetFoodDashboard />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
+          <Route path="/login" element={<GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}><Login /></GoogleOAuthProvider>} />
+          <Route path="/register" element={<GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}><Signup /></GoogleOAuthProvider>} />
+
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/otp-verification" element={<OTPVerification />} />
           <Route path="/marketplace" element={<VendorMarketplace />} />
