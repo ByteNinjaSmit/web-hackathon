@@ -105,6 +105,13 @@ const login = async (req, res, next) => {
     }
 
     const token = await user.generateToken();
+
+    res.cookie("authToken", token, {
+      httpOnly: true, // Prevents access from client-side JavaScript
+      secure: process.env.NODE_ENV === "production", // Only send over HTTPS in production
+      sameSite: "strict", // Helps prevent CSRF attacks
+  });
+  
     return res.status(200).json({
       message: "Login successful",
       token,
