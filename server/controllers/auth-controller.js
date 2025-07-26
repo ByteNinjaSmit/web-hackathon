@@ -143,12 +143,14 @@ const googleLogin = async (req, res, next) => {
 
     // Exchange the authorization code for tokens
     const { tokens } = await oauth2client.getToken(code);
+    oauth2client.setCredentials(tokens);
+
 
     // Get user info from Google
     const googleUser = await axios.get(
-      "https://www.googleapis.com/oauth2/v3/userinfo",
-      { headers: { Authorization: `Bearer ${tokens.access_token}` } }
+      `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${tokens.access_token}`
     );
+
 
     const { email, name, picture } = googleUser.data;
 
@@ -292,11 +294,12 @@ const vendorGoogleLogin = async (req, res, next) => {
 
     // Exchange the authorization code for tokens
     const { tokens } = await oauth2client.getToken(code);
+    oauth2client.setCredentials(tokens);
+
 
     // Get user info from Google
     const googleUser = await axios.get(
-      "https://www.googleapis.com/oauth2/v3/userinfo",
-      { headers: { Authorization: `Bearer ${tokens.access_token}` } }
+      `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${tokens.access_token}`
     );
 
     const { email, name, picture } = googleUser.data;

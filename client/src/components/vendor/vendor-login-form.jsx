@@ -41,8 +41,8 @@ export function VendorLoginForm() {
                     `${API}/api/auth/vendor-google?code=${tokenResponse["code"]}`
                 );
                 if (response.status === 200) {
-                    toast.success("Google registration successful!");
-                    // console.log(`Data: `, response.data)
+                    const data = response.data;
+                    toast.success(response.data.message);
                     storeTokenInCookies(response.data.token);
                     if (data.isProfileComplete) {
                         navigate("/vendordashboard");
@@ -144,6 +144,12 @@ export function VendorLoginForm() {
                         </Link>
                     </div>
 
+                    {/* --------------------------- */}
+
+                    <Button type="submit" className="w-full bg-[#8A2BE2] text-white hover:bg-[#8A2BE2]/90 cursor-pointer">
+                        <LogIn className="mr-2 h-4 w-4" /> Login
+                    </Button>
+                </form>
                     {/* --- Google Login Option --- */}
                     <div className="relative">
                         <div className="absolute inset-0 flex items-center">
@@ -155,17 +161,10 @@ export function VendorLoginForm() {
                             </span>
                         </div>
                     </div>
-                    // Update the Google button to use the GoogleLogin function
-                    <Button variant="outline" type="button" className="w-full" onClick={() => GoogleLogin()}>
+                    <Button variant="outline" type="button" className="w-full" onClick={GoogleLogin}>
                         <GoogleIcon />
                         Continue with Google
                     </Button>
-                    {/* --------------------------- */}
-
-                    <Button type="submit" className="w-full bg-[#8A2BE2] text-white hover:bg-[#8A2BE2]/90 cursor-pointer">
-                        <LogIn className="mr-2 h-4 w-4" /> Login
-                    </Button>
-                </form>
             </CardContent>
             <CardFooter className="text-sm text-muted-foreground text-center flex flex-col gap-2">
                 <p>
