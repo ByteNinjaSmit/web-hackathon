@@ -19,6 +19,8 @@ export const AuthProvider = ({ children }) => {
     const [isLoading, setIsLoading] = useState(true);
     const [isAdmin, setIsAdmin] = useState(false);
     const [isDeveloper, setIsDeveloper] = useState(false);
+    const [isUser, setIsUser] = useState(false);
+    const [isVendor, setIsVendor] = useState(false);
     // const navigate = useNavigate();
     const authorizationToken = `Bearer ${token}`;
     // const navigate = useNavigate();
@@ -43,6 +45,9 @@ export const AuthProvider = ({ children }) => {
         setUser(null);
         setIsAdmin(false);
         setIsDeveloper(false);
+        setIsUser(false);
+        setIsVendor(false);
+
 
         // Clear cart and table number from localStorage
         localStorage.removeItem("cart");
@@ -99,9 +104,12 @@ export const AuthProvider = ({ children }) => {
         // setIsSessionActive(false);
         // Check and set roles based on the user object
         if (user) {
-            const { isDeveloper, isAdmin, isUser } = user;
+            const { isDeveloper, isAdmin, isUser, isVendor } = user;
             // console.log('User: ',user)
             setIsAdmin(isAdmin); // Admin if any of the roles is true
+            setIsDeveloper(isDeveloper);
+            setIsUser(isUser);
+            setIsVendor(isVendor);
             // setisUser(isUser || false);
             setIsDeveloper(isDeveloper || false);
             if (isDeveloper) {
@@ -124,6 +132,8 @@ export const AuthProvider = ({ children }) => {
                 isAdmin,
                 isDeveloper,
                 API,
+                isUser,
+                isVendor,
             }}
         >
             {children}

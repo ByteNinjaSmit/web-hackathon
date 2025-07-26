@@ -1,365 +1,275 @@
 import React, { useState, useEffect } from 'react';
+import { useAuth } from '../store/auth';
 import { useLocation } from '../hooks/use-location';
 import { locationSearch, locationUtils } from '../services/locationApi';
+import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
-import { Badge } from './ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Alert, AlertDescription } from './ui/alert';
-import { Loader2, MapPin, Search, Package, Store } from 'lucide-react';
+import { Badge } from './ui/badge';
+import { MapPin, Search, Package, Store, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 const LocationBasedSearch = () => {
-  const { location, loading, error, requestLocation, isLocationAvailable } = useLocation();
-  const [searchType, setSearchType] = useState('vendors'); // 'vendors' or 'products'
-  const [searchResults, setSearchResults] = useState([]);
-  const [searchLoading, setSearchLoading] = useState(false);
-  const [searchError, setSearchError] = useState(null);
-  const [searchParams, setSearchParams] = useState({
-    category: '',
-    search: '',
-    maxDistance: 10000,
-  });
+  const { isLoggedIn, user } = useAuth();
+  const { location, loading: locationLoading, error: locationError, requestLocation } = useLocation();
+  
+  const [searchType, setSearchType] = useState('vendors');
+  const [maxDistance, setMaxDistance] = useState(10);
+  const [search, setSearch] = useState('');
+  const [category, setCategory] = useState('all');
+  const [results, setResults] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  // Auto-request location on component mount
-  useEffect(() => {
-    if (!isLocationAvailable()) {
-      requestLocation().catch(console.error);
-    }
-  }, [isLocationAvailable, requestLocation]);
+  const categories = [
+    { id: 'all', name: 'All Categories' },
+    { id: 'vegetables', name: 'Vegetables' },
+    { id: 'spices', name: 'Spices' },
+    { id: 'dairy', name: 'Dairy' },
+    { id: 'oils', name: 'Oils' },
+    { id: 'grains', name: 'Grains' }
+  ];
 
-  // Handle search
   const handleSearch = async () => {
-    if (!isLocationAvailable()) {
-      setSearchError('Location is required for search');
+    if (!location) {
+      toast.error('Location is required for search');
       return;
     }
 
-    setSearchLoading(true);
-    setSearchError(null);
-
+    setLoading(true);
     try {
-      const params = {
-        latitude: location.latitude,
-        longitude: location.longitude,
-        maxDistance: searchParams.maxDistance,
-        limit: 20,
-      };
-
-      if (searchParams.category) {
-        params.category = searchParams.category;
-      }
-
-      if (searchParams.search) {
-        params.search = searchParams.search;
-      }
-
-      let results;
+      let data;
+      
       if (searchType === 'vendors') {
-        results = await locationSearch.searchVendorsNearby(params);
-        setSearchResults(results.vendors || []);
+        data = await locationSearch.searchVendorsNearby({
+          latitude: location.latitude,
+          longitude: location.longitude,
+          maxDistance,
+          search: search || undefined,
+          category: category !== 'all' ? category : undefined
+        });
+        setResults(data.vendors || []);
       } else {
-        results = await locationSearch.searchProductsNearby(params);
-        setSearchResults(results.products || []);
+        data = await locationSearch.searchProductsNearby({
+          latitude: location.latitude,
+          longitude: location.longitude,
+          maxDistance,
+          search: search || undefined,
+          category: category !== 'all' ? category : undefined
+        });
+        setResults(data.products || []);
       }
+      
+      toast.success(`Found ${results.length} ${searchType}`);
     } catch (error) {
-      setSearchError(error.message);
-      setSearchResults([]);
+      console.error('Search error:', error);
+      toast.error('Failed to search. Please try again.');
     } finally {
-      setSearchLoading(false);
+      setLoading(false);
     }
   };
 
-  // Handle search with products
-  const handleSearchWithProducts = async () => {
-    if (!isLocationAvailable()) {
-      setSearchError('Location is required for search');
-      return;
-    }
-
-    setSearchLoading(true);
-    setSearchError(null);
-
+  const handleLocationRequest = async () => {
     try {
-      const params = {
-        latitude: location.latitude,
-        longitude: location.longitude,
-        maxDistance: searchParams.maxDistance,
-        limit: 20,
-      };
-
-      if (searchParams.category) {
-        params.category = searchParams.category;
-      }
-
-      if (searchParams.search) {
-        params.search = searchParams.search;
-      }
-
-      const results = await locationSearch.getVendorsWithProductsNearby(params);
-      setSearchResults(results.vendors || []);
+      await requestLocation();
+      toast.success('Location access granted!');
     } catch (error) {
-      setSearchError(error.message);
-      setSearchResults([]);
-    } finally {
-      setSearchLoading(false);
+      toast.error('Location access denied. Please enable location services.');
     }
   };
-
-  const renderVendorCard = (vendor) => (
-    <Card key={vendor._id} className="mb-4">
-      <CardHeader>
-        <div className="flex justify-between items-start">
-          <div>
-            <CardTitle className="text-lg">{vendor.businessName || vendor.name}</CardTitle>
-            <CardDescription>{vendor.email}</CardDescription>
-          </div>
-          {vendor.distance && (
-            <Badge variant="secondary">
-              <MapPin className="w-3 h-3 mr-1" />
-              {locationUtils.formatDistance(vendor.distance)}
-            </Badge>
-          )}
-        </div>
-      </CardHeader>
-      <CardContent>
-        {vendor.address && (
-          <p className="text-sm text-gray-600 mb-2">
-            {vendor.address.street}, {vendor.address.city}, {vendor.address.state}
-          </p>
-        )}
-        {vendor.productCount !== undefined && (
-          <div className="flex items-center text-sm text-gray-500">
-            <Package className="w-4 h-4 mr-1" />
-            {vendor.productCount} products available
-          </div>
-        )}
-        {vendor.products && vendor.products.length > 0 && (
-          <div className="mt-3">
-            <h4 className="text-sm font-medium mb-2">Available Products:</h4>
-            <div className="space-y-1">
-              {vendor.products.slice(0, 3).map((product) => (
-                <div key={product._id} className="flex justify-between text-sm">
-                  <span>{product.name}</span>
-                  <span className="text-gray-500">₹{product.pricePerUnit}/{product.unit}</span>
-                </div>
-              ))}
-              {vendor.products.length > 3 && (
-                <p className="text-xs text-gray-500">+{vendor.products.length - 3} more products</p>
-              )}
-            </div>
-          </div>
-        )}
-      </CardContent>
-    </Card>
-  );
-
-  const renderProductCard = (product) => (
-    <Card key={product._id} className="mb-4">
-      <CardHeader>
-        <div className="flex justify-between items-start">
-          <div>
-            <CardTitle className="text-lg">{product.name}</CardTitle>
-            <CardDescription>{product.category}</CardDescription>
-          </div>
-          <div className="text-right">
-            <div className="text-lg font-bold">₹{product.pricePerUnit}</div>
-            <div className="text-sm text-gray-500">per {product.unit}</div>
-          </div>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div className="flex justify-between items-center mb-2">
-          <Badge variant="outline">{product.category}</Badge>
-          {product.distance && (
-            <Badge variant="secondary">
-              <MapPin className="w-3 h-3 mr-1" />
-              {locationUtils.formatDistance(product.distance)}
-            </Badge>
-          )}
-        </div>
-        {product.supplierId && (
-          <div className="flex items-center text-sm text-gray-600">
-            <Store className="w-4 h-4 mr-1" />
-            {product.supplierId.businessName || product.supplierId.name}
-          </div>
-        )}
-        {product.description && (
-          <p className="text-sm text-gray-600 mt-2">{product.description}</p>
-        )}
-      </CardContent>
-    </Card>
-  );
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">Location-Based Search</h1>
-        <p className="text-gray-600">
-          Find vendors and products near your location
-        </p>
-      </div>
-
-      {/* Location Status */}
-      <Card className="mb-6">
+    <div className="max-w-4xl mx-auto p-6 space-y-6">
+      <Card>
         <CardHeader>
-          <CardTitle className="flex items-center">
-            <MapPin className="w-5 h-5 mr-2" />
-            Location Status
+          <CardTitle className="flex items-center gap-2">
+            <MapPin className="h-5 w-5" />
+            Location-Based Search
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          {loading && (
-            <div className="flex items-center">
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Getting your location...
-            </div>
-          )}
-          {error && (
-            <Alert className="mb-4">
-              <AlertDescription>
-                {error}
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="ml-2"
-                  onClick={requestLocation}
-                >
-                  Try Again
-                </Button>
-              </AlertDescription>
-            </Alert>
-          )}
-          {location && (
-            <div className="text-sm">
-              <p><strong>Latitude:</strong> {location.latitude.toFixed(6)}</p>
-              <p><strong>Longitude:</strong> {location.longitude.toFixed(6)}</p>
-              {location.accuracy && (
-                <p><strong>Accuracy:</strong> ±{Math.round(location.accuracy)}m</p>
-              )}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* Search Controls */}
-      <Card className="mb-6">
-        <CardHeader>
-          <CardTitle>Search Options</CardTitle>
-        </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex gap-4">
-            <div className="flex-1">
+          {/* Location Status */}
+          <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4" />
+              <span className="text-sm">
+                {locationLoading ? 'Getting location...' : 
+                 locationError ? 'Location error' :
+                 location ? `Location: ${location.latitude.toFixed(4)}, ${location.longitude.toFixed(4)}` :
+                 'Location not available'}
+              </span>
+            </div>
+            {!location && !locationLoading && (
+              <Button onClick={handleLocationRequest} size="sm">
+                Enable Location
+              </Button>
+            )}
+          </div>
+
+          {/* Search Controls */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div>
               <label className="text-sm font-medium mb-2 block">Search Type</label>
               <Select value={searchType} onValueChange={setSearchType}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="vendors">Vendors</SelectItem>
-                  <SelectItem value="products">Products</SelectItem>
-                  <SelectItem value="vendors-with-products">Vendors with Products</SelectItem>
+                  <SelectItem value="vendors">
+                    <div className="flex items-center gap-2">
+                      <Store className="h-4 w-4" />
+                      Vendors
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="products">
+                    <div className="flex items-center gap-2">
+                      <Package className="h-4 w-4" />
+                      Products
+                    </div>
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex-1">
+
+            <div>
               <label className="text-sm font-medium mb-2 block">Max Distance</label>
-              <Select 
-                value={searchParams.maxDistance.toString()} 
-                onValueChange={(value) => setSearchParams(prev => ({ ...prev, maxDistance: parseInt(value) }))}
-              >
+              <Select value={maxDistance.toString()} onValueChange={(value) => setMaxDistance(Number(value))}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="5000">5 km</SelectItem>
-                  <SelectItem value="10000">10 km</SelectItem>
-                  <SelectItem value="20000">20 km</SelectItem>
-                  <SelectItem value="50000">50 km</SelectItem>
+                  <SelectItem value="5">5 km</SelectItem>
+                  <SelectItem value="10">10 km</SelectItem>
+                  <SelectItem value="20">20 km</SelectItem>
+                  <SelectItem value="50">50 km</SelectItem>
                 </SelectContent>
               </Select>
             </div>
-          </div>
 
-          <div className="flex gap-4">
-            <div className="flex-1">
-              <label className="text-sm font-medium mb-2 block">Search Term</label>
-              <Input
-                placeholder="Search for products or vendors..."
-                value={searchParams.search}
-                onChange={(e) => setSearchParams(prev => ({ ...prev, search: e.target.value }))}
-              />
-            </div>
-            <div className="flex-1">
+            <div>
               <label className="text-sm font-medium mb-2 block">Category</label>
-              <Select 
-                value={searchParams.category} 
-                onValueChange={(value) => setSearchParams(prev => ({ ...prev, category: value }))}
-              >
+              <Select value={category} onValueChange={setCategory}>
                 <SelectTrigger>
-                  <SelectValue placeholder="All categories" />
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All categories</SelectItem>
-                  <SelectItem value="Vegetables">Vegetables</SelectItem>
-                  <SelectItem value="Fruits">Fruits</SelectItem>
-                  <SelectItem value="Dairy">Dairy</SelectItem>
-                  <SelectItem value="Grains">Grains</SelectItem>
-                  <SelectItem value="Spices">Spices</SelectItem>
-                  <SelectItem value="Condiments">Condiments</SelectItem>
-                  <SelectItem value="Meat">Meat</SelectItem>
-                  <SelectItem value="Other">Other</SelectItem>
+                  {categories.map(cat => (
+                    <SelectItem key={cat.id} value={cat.id}>
+                      {cat.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
+
+            <div>
+              <label className="text-sm font-medium mb-2 block">Search Term</label>
+              <Input
+                placeholder="Search..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+              />
+            </div>
           </div>
 
-          <div className="flex gap-2">
-            <Button 
-              onClick={searchType === 'vendors-with-products' ? handleSearchWithProducts : handleSearch}
-              disabled={!isLocationAvailable() || searchLoading}
-              className="flex-1"
-            >
-              {searchLoading ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Searching...
-                </>
-              ) : (
-                <>
-                  <Search className="w-4 h-4 mr-2" />
-                  Search
-                </>
-              )}
-            </Button>
-          </div>
+          <Button 
+            onClick={handleSearch} 
+            disabled={!location || loading}
+            className="w-full"
+          >
+            {loading ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                Searching...
+              </>
+            ) : (
+              <>
+                <Search className="h-4 w-4 mr-2" />
+                Search {searchType}
+              </>
+            )}
+          </Button>
         </CardContent>
       </Card>
 
-      {/* Search Results */}
-      {searchError && (
-        <Alert className="mb-6">
-          <AlertDescription>{searchError}</AlertDescription>
-        </Alert>
-      )}
-
-      {searchResults.length > 0 && (
-        <div>
-          <h2 className="text-xl font-semibold mb-4">
-            Search Results ({searchResults.length})
-          </h2>
-          <div className="space-y-4">
-            {searchResults.map((item) => 
-              searchType === 'products' ? renderProductCard(item) : renderVendorCard(item)
-            )}
-          </div>
-        </div>
-      )}
-
-      {!searchLoading && searchResults.length === 0 && !searchError && (
+      {/* Results */}
+      {results.length > 0 && (
         <Card>
-          <CardContent className="text-center py-8">
-            <p className="text-gray-500">No results found. Try adjusting your search criteria.</p>
+          <CardHeader>
+            <CardTitle>
+              Results ({results.length} {searchType} found)
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {results.map((item, index) => (
+                <Card key={item._id || index} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-4">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <h4 className="font-semibold">
+                          {searchType === 'vendors' 
+                            ? (item.businessName || item.name || 'Unnamed Vendor')
+                            : item.name
+                          }
+                        </h4>
+                        <p className="text-sm text-gray-600">
+                          {searchType === 'vendors' 
+                            ? item.category 
+                            : item.category
+                          }
+                        </p>
+                      </div>
+                      <Badge variant="secondary">
+                        {locationUtils.formatDistance(item.distance)}
+                      </Badge>
+                    </div>
+                    
+                    {searchType === 'vendors' ? (
+                      <div className="space-y-2">
+                        {item.address && (
+                          <p className="text-xs text-gray-500">{item.address}</p>
+                        )}
+                        {item.phone && (
+                          <p className="text-xs text-gray-500">📞 {item.phone}</p>
+                        )}
+                        {item.products && item.products.length > 0 && (
+                          <p className="text-xs text-purple-600">
+                            {item.products.length} products available
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <p className="text-lg font-bold text-purple-600">
+                          ₹{item.price}
+                        </p>
+                        {item.supplierId && (
+                          <p className="text-xs text-gray-500">
+                            By: {item.supplierId.businessName || item.supplierId.name}
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* No Results */}
+      {results.length === 0 && !loading && location && (
+        <Card>
+          <CardContent className="p-8 text-center">
+            <Package className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              No {searchType} found nearby
+            </h3>
+            <p className="text-gray-600">
+              Try adjusting your search criteria or increasing the distance
+            </p>
           </CardContent>
         </Card>
       )}
