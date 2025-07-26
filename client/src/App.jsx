@@ -26,12 +26,9 @@ import ApprovedSuppliers from "./pages/admin/ApprovedSuppliers";
 import RejectedSuppliers from "./pages/admin/RejectedSuppliers";
 import SupplierCommunication from "./pages/admin/SupplierCommunication";
 import VendorDashboardPage from "./pages/vendor/Vendor-Dashboard-Page";
-<<<<<<< HEAD
 import StreetFoodDashboard from "./pages/client/StreetFoodDashboard";
-=======
-import StreetFoodDashboard from "./components/StreetFoodDashboard";
+// import StreetFoodDashboard from "./components/StreetFoodDashboard";
 import SidebarMenuItem from "./pages/admin/layout";
->>>>>>> 5ebf657c532e5afb6954aad58c15b65e496efb63
 
 const App = () => {
   const location = useLocation();

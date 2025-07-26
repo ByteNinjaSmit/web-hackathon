@@ -1,23 +1,3 @@
-<<<<<<< HEAD:client/src/pages/client/VendorCard.jsx
-import React, { useState } from 'react';
-import { Star, MapPin, Clock, Phone, Package } from 'lucide-react';
-import VendorMenu from './VendorMenu';
-
-const VendorCard = ({ vendor }) => {
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
-  return (
-    <>
-      {isMenuOpen && <VendorMenu vendor={vendor} onClose={() => setIsMenuOpen(false)} />}
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-    <div className="p-4">
-      {/* Vendor Header */}
-      <div className="flex items-start justify-between mb-3">
-        <div className="flex items-center space-x-3">
-          <div className="text-3xl">{vendor.image}</div>
-          <div>
-            <h4 className="font-semibold text-gray-900">{vendor.name}</h4>
-            <p className="text-sm text-gray-600">{vendor.category}</p>
-=======
 import React from 'react';
 import { Star, MapPin, Clock, Phone, Package, Building2 } from 'lucide-react';
 
@@ -71,7 +51,6 @@ const VendorCard = ({ vendor }) => {
           </div>
           <div className={`px-2 py-1 rounded-full text-xs font-medium ${status.color}`}>
             {status.text}
->>>>>>> 5ebf657c532e5afb6954aad58c15b65e496efb63:client/src/components/VendorCard.jsx
           </div>
         </div>
 
@@ -94,24 +73,6 @@ const VendorCard = ({ vendor }) => {
             </div>
           )}
         </div>
-<<<<<<< HEAD:client/src/pages/client/VendorCard.jsx
-      </div>
-      {/* Action Buttons */}
-      <div className="flex space-x-2">
-        <button 
-          onClick={() => setIsMenuOpen(true)}
-          className="flex-1 bg-purple-600 text-white py-2 px-4 rounded-lg hover:bg-purple-700 transition-colors"
-        >
-          View Menu
-        </button>
-        <button className="p-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-          <Phone className="h-4 w-4 text-gray-600" />
-        </button>
-      </div>
-    </div>
-      </div>
-    </>
-=======
 
         {/* Address */}
         {vendor.address && (
@@ -172,7 +133,6 @@ const VendorCard = ({ vendor }) => {
         )}
       </div>
     </div>
->>>>>>> 5ebf657c532e5afb6954aad58c15b65e496efb63:client/src/components/VendorCard.jsx
   );
 };
 
