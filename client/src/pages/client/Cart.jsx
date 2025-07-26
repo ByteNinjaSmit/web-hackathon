@@ -1,9 +1,17 @@
 import React, { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Search, MapPin, Star, Clock, Phone, ShoppingCart, Bell, User, Menu, X, Truck, Plus, Minus, Trash2, Tag, CreditCard } from 'lucide-react';
+import { useCart } from '../../store/cart';
+import { toast } from 'react-toastify';
 
 const Cart = () => {
+  const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [cartItems, setCartItems] = useState([
+  const { cartItems, updateItemQuantity, removeFromCart, clearCart, totalPrice } = useCart();
+  const [promoCode, setPromoCode] = useState('');
+  
+  // Mock cart items for reference only - using context instead
+  /*const [cartItems, setCartItems] = useState([
     {
       id: 1,
       vendorId: 1,
@@ -48,24 +56,21 @@ const Cart = () => {
       quantity: 2,
       image: '🥛'
     }
-  ]);
+  ]);*/
 
-  const updateQuantity = (itemId, newQuantity) => {
+  const handleUpdateQuantity = (itemId, newQuantity) => {
     if (newQuantity <= 0) {
-      removeItem(itemId);
+      removeFromCart(itemId);
       return;
     }
-    setCartItems(cartItems.map(item => 
-      item.id === itemId 
-        ? { ...item, quantity: newQuantity }
-        : item
-    ));
+    updateItemQuantity(itemId, newQuantity);
   };
 
-  const removeItem = (itemId) => {
-    setCartItems(cartItems.filter(item => item.id !== itemId));
+  const handleRemoveItem = (itemId) => {
+    removeFromCart(itemId);
   };
 
+  // Group items by vendor
   const groupedItems = cartItems.reduce((acc, item) => {
     if (!acc[item.vendorId]) {
       acc[item.vendorId] = {
@@ -80,9 +85,43 @@ const Cart = () => {
     return acc;
   }, {});
 
-  const totalAmount = Object.values(groupedItems).reduce((sum, vendor) => sum + vendor.subtotal, 0);
+  const totalAmount = totalPrice;
   const deliveryFee = totalAmount > 500 ? 0 : 30;
   const finalAmount = totalAmount + deliveryFee;
+  
+  // Handle checkout process
+  const handleCheckout = () => {
+    if (cartItems.length === 0) {
+      toast.error('Your cart is empty!');
+      return;
+    }
+    
+    // Create a new order with current date
+    const newOrder = {
+      id: `ORD${Math.floor(Math.random() * 10000).toString().padStart(4, '0')}`,
+      items: cartItems.map(item => ({
+        ...item,
+        itemString: `${item.name} (${item.quantity}${item.unit})`
+      })),
+      total: finalAmount,
+      status: 'processing',
+      orderDate: new Date().toISOString().split('T')[0],
+      estimatedDelivery: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().split('T')[0] + ' 14:00 PM'
+    };
+    
+    // Store the order in localStorage
+    const existingOrders = JSON.parse(localStorage.getItem('orders') || '[]');
+    localStorage.setItem('orders', JSON.stringify([...existingOrders, newOrder]));
+    
+    // Clear the cart
+    clearCart();
+    
+    // Show success message
+    toast.success('Order placed successfully!');
+    
+    // Navigate to orders page
+    navigate('/orders');
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -91,7 +130,7 @@ const Cart = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
-            <a href="/" className="flex items-center space-x-3">
+            <Link to="/" className="flex items-center space-x-3">
               <div className="bg-purple-600 p-2 rounded-xl">
                 <Truck className="h-6 w-6 text-white" />
               </div>
@@ -99,14 +138,14 @@ const Cart = () => {
                 <h1 className="text-xl font-bold text-purple-900">StreetSupply</h1>
                 <p className="text-xs text-purple-600">Raw Materials Hub</p>
               </div>
-            </a>
+            </Link>
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-8">
-              <a href="/" className="text-gray-600 hover:text-purple-600">Home</a>
-              <a href="/orders" className="text-gray-600 hover:text-purple-600">Orders</a>
-              <a href="/favorites" className="text-gray-600 hover:text-purple-600">Favorites</a>
-              <a href="#" className="text-gray-600 hover:text-purple-600">Help</a>
+              <Link to="/" className="text-gray-600 hover:text-purple-600">Home</Link>
+              <Link to="/orders" className="text-gray-600 hover:text-purple-600">Orders</Link>
+              <Link to="/favorites" className="text-gray-600 hover:text-purple-600">Favorites</Link>
+              <Link to="/help" className="text-gray-600 hover:text-purple-600">Help</Link>
             </nav>
 
             {/* Right Side Icons */}
@@ -115,13 +154,13 @@ const Cart = () => {
                 <Bell className="h-5 w-5" />
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">3</span>
               </button>
-              <a href="/cart" className="p-2 text-purple-600">
+              <Link to="/cart" className="p-2 text-purple-600">
                 <ShoppingCart className="h-5 w-5" />
-              </a>
-              <a href="/profile" className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+              </Link>
+              <Link to="/profile" className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
                 <User className="h-4 w-4" />
                 <span className="hidden sm:block">Profile</span>
-              </a>
+              </Link>
               
               {/* Mobile Menu Button */}
               <button 
@@ -138,10 +177,10 @@ const Cart = () => {
         {isMobileMenuOpen && (
           <div className="md:hidden bg-white border-t border-purple-100">
             <div className="px-4 py-3 space-y-3">
-              <a href="/" className="block text-gray-600">Home</a>
-              <a href="/orders" className="block text-gray-600">Orders</a>
-              <a href="/favorites" className="block text-gray-600">Favorites</a>
-              <a href="#" className="block text-gray-600">Help</a>
+              <Link to="/" className="block text-gray-600">Home</Link>
+              <Link to="/orders" className="block text-gray-600">Orders</Link>
+              <Link to="/favorites" className="block text-gray-600">Favorites</Link>
+              <Link to="/help" className="block text-gray-600">Help</Link>
             </div>
           </div>
         )}
@@ -162,12 +201,12 @@ const Cart = () => {
             <ShoppingCart className="h-16 w-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">Your cart is empty</h3>
             <p className="text-gray-600 mb-4">Add some items to get started</p>
-            <a
-              href="/"
+            <Link
+              to="/"
               className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors"
             >
               Start Shopping
-            </a>
+            </Link>
           </div>
         </div>
       ) : (
@@ -205,7 +244,7 @@ const Cart = () => {
                           {/* Quantity Controls */}
                           <div className="flex items-center space-x-2">
                             <button
-                              onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                              onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)}
                               className="p-1 border border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
                             >
                               <Minus className="h-4 w-4 text-gray-600" />
@@ -214,7 +253,7 @@ const Cart = () => {
                               {item.quantity} {item.unit}
                             </span>
                             <button
-                              onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                              onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)}
                               className="p-1 border border-gray-300 rounded-full hover:bg-gray-50 transition-colors"
                             >
                               <Plus className="h-4 w-4 text-gray-600" />
@@ -228,7 +267,7 @@ const Cart = () => {
 
                           {/* Remove Button */}
                           <button
-                            onClick={() => removeItem(item.id)}
+                            onClick={() => handleRemoveItem(item.id)}
                             className="p-2 text-red-500 hover:text-red-700 transition-colors"
                           >
                             <Trash2 className="h-4 w-4" />
@@ -284,6 +323,8 @@ const Cart = () => {
                       <input
                         type="text"
                         placeholder="Promo code"
+                        value={promoCode}
+                        onChange={(e) => setPromoCode(e.target.value)}
                         className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                       />
                       <button className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm">
@@ -293,18 +334,21 @@ const Cart = () => {
                   </div>
 
                   {/* Checkout Button */}
-                  <button className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 transition-colors font-medium flex items-center justify-center space-x-2">
+                  <button 
+                    onClick={handleCheckout}
+                    className="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 transition-colors font-medium flex items-center justify-center space-x-2"
+                  >
                     <CreditCard className="h-5 w-5" />
                     <span>Proceed to Checkout</span>
                   </button>
 
                   {/* Continue Shopping */}
-                  <a
-                    href="/"
+                  <Link
+                    to="/"
                     className="block text-center text-purple-600 hover:text-purple-700 py-2"
                   >
                     Continue Shopping
-                  </a>
+                  </Link>
                 </div>
               </div>
             </div>

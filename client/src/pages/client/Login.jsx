@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Login = () => (
   <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -16,11 +17,11 @@ const Login = () => (
         <button type="submit" className="w-full bg-purple-600 text-white py-2 rounded-lg font-semibold hover:bg-purple-700 transition-colors">Login</button>
       </form>
       <div className="flex justify-between mt-4 text-sm">
-        <a href="#" className="text-purple-600 hover:underline">Forgot Password?</a>
-        <a href="#" className="text-purple-600 hover:underline">Sign Up</a>
+        <Link to="/forgot-password" className="text-purple-600 hover:underline">Forgot Password?</Link>
+        <Link to="/signup" className="text-purple-600 hover:underline">Sign Up</Link>
       </div>
     </div>
   </div>
 );
 
-export default Login; 
+export default Login;

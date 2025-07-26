@@ -182,6 +182,8 @@ app.get("/", (req, res) => {
     res.send("Welcome to the API");
 });
 
+app.use("/api/auth", sensitiveEndpointsLimiter, authRouter);
+
 // Remaining Routes
 app.use("/api/auth", authRouter);
 app.use("/api/products", productRouter);

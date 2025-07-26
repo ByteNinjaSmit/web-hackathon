@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../store/auth';
-import { useLocation } from '../hooks/use-location';
-import { locationSearch } from '../services/locationApi';
-import Header from './layout/Header';
-import HeroSection from './layout/HeroSection';
+import HeroSection from '@/components/layout/HeroSection';
 import CategoryList from './CategoryList';
 import VendorList from './VendorList';
 import QuickActions from './QuickActions';
 import { toast } from 'sonner';
 import { MapPin, Filter, Package, Loader2 } from 'lucide-react';
+import { useAuth } from '@/store/auth';
+import { useLocation } from '@/hooks/use-location';
+import { locationSearch } from '@/services/locationApi';
+import Header from '@/components/layout/Header';
 
 const StreetFoodDashboard = () => {
   const { isLoggedIn, user, API } = useAuth();

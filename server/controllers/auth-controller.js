@@ -105,6 +105,13 @@ const login = async (req, res, next) => {
     }
 
     const token = await user.generateToken();
+
+    res.cookie("authToken", token, {
+      httpOnly: true, // Prevents access from client-side JavaScript
+      secure: process.env.NODE_ENV === "production", // Only send over HTTPS in production
+      sameSite: "strict", // Helps prevent CSRF attacks
+  });
+
     return res.status(200).json({
       message: "Login successful",
       token,
@@ -122,51 +129,71 @@ const login = async (req, res, next) => {
 // Sign In (Continue with Google)
 // Sign up (Continue with Google)
 // ------------------
+// Google Login with Authorization Code
 const googleLogin = async (req, res, next) => {
   try {
     const { code } = req.query;
-    // console.log('Code: ',code)
+    
     if (!code) {
-      return res.status(400).json({ message: "Missing code parameter." });
+      return res.status(400).json({ 
+        success: false, 
+        message: "Authorization code is required" 
+      });
     }
 
+    // Exchange the authorization code for tokens
     const { tokens } = await oauth2client.getToken(code);
-    oauth2client.setCredentials(tokens);
-
-    const userRes = await axios.get(
-      `https://www.googleapis.com/oauth2/v1/userinfo?alt=json&access_token=${tokens.access_token}`
+    
+    // Get user info from Google
+    const googleUser = await axios.get(
+      'https://www.googleapis.com/oauth2/v3/userinfo',
+      { headers: { Authorization: `Bearer ${tokens.access_token}` } }
     );
-
-    const { email, name, picture } = userRes.data;
-
+    
+    const { email, name, picture } = googleUser.data;
+    
     if (!email) {
-      // console.log('Email not returned from Google');
-      return res
-        .status(400)
-        .json({ message: "Email not returned from Google" });
+      return res.status(400).json({
+        success: false,
+        message: "Email is required from Google profile."
+      });
     }
-
+    
+    // Check if user exists
     let user = await User.findOne({ email });
-    let token;
-    if (!user) {
+    
+    if (user) {
+      // If user exists but not registered with Google
+      if (!user.isGoogleAccount) {
+        user.isGoogleAccount = true;
+        await user.save();
+      }
+    } else {
+      // Create new user
       user = await User.create({
-        name: name,
+        name,
         email,
         isGoogleAccount: true,
+        profilePicture: picture
       });
-      logger.info(`New Google user created: ${email}`);
     }
-    if (user) {
-      token = await user.generateToken();
-      logger.info(`User logged in: ${email}`);
-    }
-
+    
+    // Generate JWT token
+    const token = await user.generateToken();
+    
+    // Set token as cookie
+    res.cookie('authToken', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 24 * 60 * 60 * 1000 // 1 day
+    });
+    
     return res.status(200).json({
+      success: true,
       message: "Google login successful",
       token,
-      user,
-      userId: user._id.toString(),
       isProfileComplete: checkUserProfileComplete(user),
+      user
     });
   } catch (error) {
     logger.error("Google login error", error);
@@ -385,44 +412,55 @@ const loginVendor = async (req, res, next) => {
 
 const getCurrentUser = async (req, res, next) => {
   try {
-    const token = req.cookies?.authToken;
+      const token = req.cookies?.authToken;
 
-    if (!token) {
-      return res
-        .status(401)
-        .json({ message: "Unauthorized: No token provided" });
-    }
+      if (!token) {
+          return res.status(401).json({ message: "Unauthorized: No token provided" });
+      }
 
-    // Verify and decode token
-    const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
-    const { userID, role } = decoded;
+      // Verify and decode token
+      const decoded = jwt.verify(token, process.env.JWT_SECRET_KEY);
+      const { userID, role } = decoded;
 
-    // Validate role and model mapping
-    const roleModelMap = {
-      user: User,
-      admin: Admin,
-      vendor: Vendor,
-    };
+      // ✅ ADD THIS CHECK: Ensure the token payload is valid
+      if (!userID || !role) {
+          return res.status(401).json({ message: "Unauthorized: Invalid token payload" });
+      }
 
-    const model = roleModelMap[role];
+      // Validate role and model mapping
+      const roleModelMap = {
+          user: User,
+          admin: Admin,
+          vendor: Vendor,
+      };
+      const model = roleModelMap[role];
 
-    if (!model) {
-      return res.status(400).json({ message: "Invalid user role in token" });
-    }
+      if (!model) {
+          return res.status(400).json({ message: "Invalid user role in token" });
+      }
 
-    // Fetch user
-    const userData = await model.findById(userID).select("-password");
+      // Fetch user
+      const userData = await model.findById(userID).select("-password");
 
-    if (!userData) {
-      return res.status(404).json({ message: "User not found" });
-    }
+      if (!userData) {
+          return res.status(404).json({ message: "User not found" });
+      }
 
-    return res.status(200).json({
-      user: userData,
-    });
+      return res.status(200).json({
+          user: userData,
+      });
   } catch (error) {
-    console.error("Error fetching current user:", error);
-    next(error);
+      // ✅ ENHANCED CATCH BLOCK
+      if (error.name === 'TokenExpiredError') {
+          return res.status(401).json({ message: 'Unauthorized: Token has expired' });
+      }
+      if (error.name === 'JsonWebTokenError') {
+          return res.status(401).json({ message: 'Unauthorized: Invalid token' });
+      }
+      
+      // For other types of errors
+      console.error("Error fetching current user:", error);
+      next(error);
   }
 };
 

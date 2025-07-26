@@ -1,4 +1,5 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 
 const Signup = () => (
   <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -21,10 +22,10 @@ const Signup = () => (
       </form>
       <div className="flex justify-center mt-4 text-sm">
         <span>Already have an account? </span>
-        <a href="#" className="text-purple-600 hover:underline ml-1">Login</a>
+        <Link to="/login" className="text-purple-600 hover:underline ml-1">Login</Link>
       </div>
     </div>
   </div>
 );
 
-export default Signup; 
+export default Signup;

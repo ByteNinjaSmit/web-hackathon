@@ -1,16 +1,18 @@
 import React, { useState } from 'react';
-import { Truck, Bell, ShoppingCart, User, Menu, X, LogOut, Settings } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Truck, Bell, ShoppingCart, User, Menu, X, LogOut } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../store/auth';
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const { isLoggedIn, user, LogoutUser } = useAuth();
+  const navigate = useNavigate();
 
   const handleLogout = () => {
     LogoutUser();
     setIsUserMenuOpen(false);
+    navigate('/');
   };
 
   return (
@@ -83,15 +85,13 @@ const Header = () => {
                       className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       onClick={() => setIsUserMenuOpen(false)}
                     >
-                      <ShoppingCart className="h-4 w-4 mr-2" />
-                      My Orders
+                      Orders
                     </Link>
                     <Link
                       to="/favorites"
                       className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       onClick={() => setIsUserMenuOpen(false)}
                     >
-                      <Bell className="h-4 w-4 mr-2" />
                       Favorites
                     </Link>
                     <div className="border-t border-gray-100">
@@ -132,7 +132,6 @@ const Header = () => {
             <Link to="/favorites" className="block text-gray-600" onClick={() => setIsMobileMenuOpen(false)}>Favorites</Link>
             <Link to="/help" className="block text-gray-600" onClick={() => setIsMobileMenuOpen(false)}>Help</Link>
             <Link to="/cart" className="block text-gray-600" onClick={() => setIsMobileMenuOpen(false)}>Cart</Link>
-            
             {isLoggedIn && user ? (
               <>
                 <Link to="/profile" className="block text-gray-600" onClick={() => setIsMobileMenuOpen(false)}>Profile</Link>

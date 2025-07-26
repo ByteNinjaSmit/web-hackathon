@@ -1,12 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { Search, MapPin, Star, Clock, Phone, ShoppingCart, Bell, User, Menu, X, Truck, Package, CheckCircle, AlertCircle, RotateCcw, Filter } from 'lucide-react';
+import { useCart } from '../../store/cart';
+import { toast } from 'react-toastify';
 
 const OrderManagement = () => {
+  const navigate = useNavigate();
+  const { addToCart } = useCart();
   const [activeTab, setActiveTab] = useState('all');
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [orders, setOrders] = useState([]);
 
-  // Mock OrderManagement data
-  const orders = [
+  // Load orders from localStorage
+  useEffect(() => {
+    const savedOrders = JSON.parse(localStorage.getItem('orders') || '[]');
+    setOrders(savedOrders);
+  }, []);
+
+  // Handle reorder functionality
+  const handleReorder = (order) => {
+    // Add all items from the order back to cart
+    order.items.forEach(item => {
+      addToCart(item);
+    });
+    
+    toast.success('Items added to cart!');
+    navigate('/cart');
+  };
+
+  // Mock OrderManagement data as fallback
+  const mockOrders = [
     {
       id: 'ORD001',
       vendorName: 'Fresh Veggie Hub',
@@ -48,6 +71,13 @@ const OrderManagement = () => {
       vendorImage: '🛢️'
     }
   ];
+  
+  // Use mock orders if no orders in localStorage
+  useEffect(() => {
+    if (orders.length === 0) {
+      setOrders(mockOrders);
+    }
+  }, []);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -98,7 +128,7 @@ const OrderManagement = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             {/* Logo */}
-            <a href="/" className="flex items-center space-x-3">
+            <Link to="/" className="flex items-center space-x-3">
               <div className="bg-purple-600 p-2 rounded-xl">
                 <Truck className="h-6 w-6 text-white" />
               </div>
@@ -106,14 +136,14 @@ const OrderManagement = () => {
                 <h1 className="text-xl font-bold text-purple-900">StreetSupply</h1>
                 <p className="text-xs text-purple-600">Raw Materials Hub</p>
               </div>
-            </a>
+            </Link>
 
             {/* Desktop Navigation */}
             <nav className="hidden md:flex items-center space-x-8">
-              <a href="/" className="text-gray-600 hover:text-purple-600">Home</a>
-              <a href="/orders" className="text-purple-900 hover:text-purple-600 font-medium">Orders</a>
-              <a href="/favorites" className="text-gray-600 hover:text-purple-600">Favorites</a>
-              <a href="#" className="text-gray-600 hover:text-purple-600">Help</a>
+              <Link to="/" className="text-gray-600 hover:text-purple-600">Home</Link>
+              <Link to="/orders" className="text-purple-900 hover:text-purple-600 font-medium">Orders</Link>
+              <Link to="/favorites" className="text-gray-600 hover:text-purple-600">Favorites</Link>
+              <Link to="/help" className="text-gray-600 hover:text-purple-600">Help</Link>
             </nav>
 
             {/* Right Side Icons */}
@@ -122,13 +152,13 @@ const OrderManagement = () => {
                 <Bell className="h-5 w-5" />
                 <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">3</span>
               </button>
-              <a href="/cart" className="p-2 text-gray-600 hover:text-purple-600">
+              <Link to="/cart" className="p-2 text-gray-600 hover:text-purple-600">
                 <ShoppingCart className="h-5 w-5" />
-              </a>
-              <a href="/profile" className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
+              </Link>
+              <Link to="/profile" className="flex items-center space-x-2 bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700">
                 <User className="h-4 w-4" />
                 <span className="hidden sm:block">Profile</span>
-              </a>
+              </Link>
               
               {/* Mobile Menu Button */}
               <button 
@@ -145,10 +175,10 @@ const OrderManagement = () => {
         {isMobileMenuOpen && (
           <div className="md:hidden bg-white border-t border-purple-100">
             <div className="px-4 py-3 space-y-3">
-              <a href="/" className="block text-gray-600">Home</a>
-              <a href="/orders" className="block text-purple-900 font-medium">Orders</a>
-              <a href="/favorites" className="block text-gray-600">Favorites</a>
-              <a href="#" className="block text-gray-600">Help</a>
+              <Link to="/" className="block text-gray-600">Home</Link>
+              <Link to="/orders" className="block text-purple-900 font-medium">Orders</Link>
+              <Link to="/favorites" className="block text-gray-600">Favorites</Link>
+              <Link to="/help" className="block text-gray-600">Help</Link>
             </div>
           </div>
         )}
@@ -190,12 +220,12 @@ const OrderManagement = () => {
             <Package className="h-16 w-16 text-gray-300 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No orders found</h3>
             <p className="text-gray-600 mb-4">You haven't placed any orders yet.</p>
-            <a
-              href="/"
+            <Link
+              to="/"
               className="bg-purple-600 text-white px-6 py-2 rounded-lg hover:bg-purple-700 transition-colors"
             >
               Start Shopping
-            </a>
+            </Link>
           </div>
         ) : (
           <div className="space-y-6">
@@ -238,7 +268,10 @@ const OrderManagement = () => {
                     
                     <div className="flex space-x-3">
                       {order.status === 'delivered' && (
-                        <button className="flex items-center space-x-1 text-purple-600 hover:text-purple-700">
+                        <button 
+                          onClick={() => handleReorder(order)}
+                          className="flex items-center space-x-1 text-purple-600 hover:text-purple-700"
+                        >
                           <RotateCcw className="h-4 w-4" />
                           <span>Reorder</span>
                         </button>
