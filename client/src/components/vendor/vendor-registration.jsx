@@ -37,6 +37,9 @@ export default function VendorRegistrationForm() {
         password: "",
         confirmPassword: "",
         businessName: "",
+        fssaiNumber: "", // New field
+        gstNumber: "",   // New field
+        businessLicense: "", // New field
         address: { street: "", city: "", state: "", zipCode: "", country: "India" },
         location: { type: 'Point', coordinates: [] },
     });
@@ -101,6 +104,24 @@ export default function VendorRegistrationForm() {
                             <div className="grid gap-2"><Label htmlFor="email">Email Address</Label><Input id="email" type="email" placeholder="you@example.com" required onChange={handleChange} /></div>
                             <div className="grid gap-2"><Label htmlFor="phone">Phone Number</Label><Input id="phone" type="tel" placeholder="+91 98765 43210" required onChange={handleChange} /></div>
                         </div>
+
+                        {/* --- New Legal Information Section --- */}
+                        <div className="grid md:grid-cols-3 gap-6">
+                            <div className="grid gap-2">
+                                <Label htmlFor="fssaiNumber">FSSAI Number</Label>
+                                <Input id="fssaiNumber" placeholder="14-digit number" onChange={handleChange} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="gstNumber">GST Number</Label>
+                                <Input id="gstNumber" placeholder="15-digit number" onChange={handleChange} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="businessLicense">Business License</Label>
+                                <Input id="businessLicense" placeholder="License ID" onChange={handleChange} />
+                            </div>
+                        </div>
+                        {/* ------------------------------------ */}
+
                         <div className="grid gap-2"><Label htmlFor="street">Street Address</Label><Input id="street" placeholder="e.g., 123 Market Lane" required onChange={handleAddressChange} /></div>
                         <div className="grid md:grid-cols-3 gap-6">
                             <div className="grid gap-2"><Label htmlFor="city">City</Label><Input id="city" placeholder="e.g., Mumbai" required onChange={handleAddressChange} /></div>

@@ -54,7 +54,26 @@ const vendorSchema = new mongoose.Schema({
         },
         message: 'Coordinates must be [longitude, latitude] with valid ranges'
       }
-    }
+    } ,
+    fssaiNumber: {
+      type: String,
+      unique: true,
+      sparse: true, // Allows multiple documents to have a null value for this field
+      trim: true,
+    },
+    gstNumber: {
+      type: String,
+      unique: true,
+      sparse: true,
+      trim: true,
+    },
+    businessLicense: {
+      type: String,
+      unique: true,
+      sparse: true,
+      trim: true,
+    }, 
+    
   },
   //   Add Address  related Fields
   address: {
