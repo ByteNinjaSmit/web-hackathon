@@ -41,6 +41,8 @@ import AdminLogin from "./pages/admin/Login";
 import AdminProfile from "./pages/admin/Profile";
 import UserManagement from "./pages/admin/Users";
 
+import Users from "./pages/admin/Users";
+
 // ProtectedRoute component
 const ProtectedRoute = ({ children }) => {
   const { isLoggedIn, isLoading } = useAuth();
@@ -79,9 +81,9 @@ const App = () => {
           <Route path="/inventory" element={<InventoryTracker />} />
           <Route path="/profile" element={<ProfileManagement />} />
           <Route path="/location-search" element={<LocationBasedSearch />} />
-            <Route path="/vendordashboard" element={<VendorDashboardPage />} />
-            <Route path="/adminlogin" element={<AdminLogin />} /> 
-            <Route path="/admin" element={<SidebarMenuItem />}>
+          <Route path="/vendordashboard" element={<VendorDashboardPage />} />
+          <Route path="/adminlogin" element={<AdminLogin />} />
+          <Route path="/admin" element={<SidebarMenuItem />}>
             <Route path="pending-verifications" element={<PendingVerifications />} />
             <Route path="approved-suppliers" element={<ApprovedSuppliers />} />
             <Route path="rejected-suppliers" element={<RejectedSuppliers />} />
@@ -89,6 +91,7 @@ const App = () => {
             <Route path="dashboard" element={<Dashboard />} />
             <Route path="profile" element={<AdminProfile />} />
             <Route path="users" element={<UserManagement />} />
+            <Route path="/admin/users" element={<Users />} />
           </Route>
 
         </Routes >

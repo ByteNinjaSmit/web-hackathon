@@ -1,5 +1,6 @@
 const Vendor = require("../database/models/vendor-model");
 const RVendor = require("../database/models/rejected-vendors-model");
+const Admin = require("../database/models/admin-model");
 
 const getUnverifiedVendors = async (req, res) => {
   try {
@@ -59,4 +60,27 @@ const rejectVendor = async (req, res) => {
 };
 
 
-module.exports = { getUnverifiedVendors, approveVendor, rejectVendor };
+const registerAdmin = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password)
+      return res.status(400).json({ message: "Email and password are required." });
+
+    const existingAdmin = await Admin.findOne({ email });
+    if (existingAdmin)
+      return res.status(409).json({ message: "Admin already exists." });
+
+    const newAdmin = new Admin({ email, password });
+    await newAdmin.save();
+
+    return res.status(201).json({ message: "Admin registered successfully" });
+  } catch (error) {
+    console.error("Error in registerAdmin:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+};
+
+
+
+module.exports = { getUnverifiedVendors, approveVendor, rejectVendor, registerAdmin  };
