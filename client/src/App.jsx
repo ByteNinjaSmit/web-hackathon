@@ -24,6 +24,7 @@ import { useAuth } from './store/auth';
 // 1. IMPORT YOUR NEW VENDOR REGISTRATION FORM
 // Make sure the path is correct for your project structure
 import VendorRegistrationForm from "./components/vendor/vendor-registration"; // Or wherever you saved it
+import VendorCompleteProfilePage from "./pages/vendor/Vendor-Complete-Profile-Page";
 
 
 //admin pages import
@@ -59,8 +60,8 @@ const App = () => {
         <Routes>
           {/* 2. UPDATE THE ELEMENT FOR THE /vendor-register ROUTE */}
           <Route path="/vendor-register" element={<GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}><VendorRegistrationForm /></GoogleOAuthProvider>} />
-          
           <Route path="/vendor-login" element={<GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}><VendorLoginPage /></GoogleOAuthProvider>} />
+          <Route path="/vendor-complete-profile" element={<GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}><VendorCompleteProfilePage /></GoogleOAuthProvider>} />
 
           <Route path="/" element={<StreetFoodDashboard />} />
           <Route path="/home" element={<StreetFoodDashboard />} />
@@ -78,7 +79,6 @@ const App = () => {
           <Route path="/inventory" element={<InventoryTracker />} />
           <Route path="/profile" element={<ProfileManagement />} />
           <Route path="/location-search" element={<LocationBasedSearch />} />
-
             <Route path="/vendordashboard" element={<VendorDashboardPage />} />
             <Route path="/adminlogin" element={<AdminLogin />} /> 
             <Route path="/admin" element={<SidebarMenuItem />}>
