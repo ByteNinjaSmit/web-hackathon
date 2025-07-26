@@ -19,7 +19,6 @@ import VendorRegistrationPage from "./pages/vendor/Vendor-Registeration-Page";
 import VendorLoginPage from "./pages/vendor/Vendor-Login-Page";
 
 //admin pages import
-import AdminLayout from "./components/admin/AdminLayout";
 import Dashboard from "./pages/admin/Dashboard";
 import PendingVerifications from "./pages/admin/PendingVerifications";
 import ApprovedSuppliers from "./pages/admin/ApprovedSuppliers";
@@ -27,6 +26,7 @@ import RejectedSuppliers from "./pages/admin/RejectedSuppliers";
 import SupplierCommunication from "./pages/admin/SupplierCommunication";
 import VendorDashboardPage from "./pages/vendor/Vendor-Dashboard-Page";
 import StreetFoodDashboard from "./components/StreetFoodDashboard";
+import SidebarMenuItem from "./pages/admin/layout";
 
 const App = () => {
   const location = useLocation();
@@ -51,12 +51,13 @@ const App = () => {
           <Route path="/chat" element={<ChatSupport />} />
           <Route path="/inventory" element={<InventoryTracker />} />
           <Route path="/profile" element={<ProfileManagement />} />
-          <Route path="/admin" element={<AdminLayout />}>
-            <Route index element={<VendorDashboardPage />} />
+          <Route path="/admin" element={<SidebarMenuItem />}>
+            {/* <Route index element={<VendorDashboardPage />} /> */}
             <Route path="pending-verifications" element={<PendingVerifications />} />
             <Route path="approved-suppliers" element={<ApprovedSuppliers />} />
             <Route path="rejected-suppliers" element={<RejectedSuppliers />} />
             <Route path="supplier-communication" element={<SupplierCommunication />} />
+            <Route path="dashboard" element={<Dashboard />} />
           </Route>
 
         </Routes >
