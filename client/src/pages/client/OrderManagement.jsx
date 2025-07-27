@@ -36,7 +36,7 @@ const OrderManagement = () => {
     try {
       setIsLoading(true)
       setError(null)
-      const response = await axios.get(`${API}/api/orders/user`, {
+      const response = await axios.get(`${API}/api/users/orders`, {
         headers: {
           Authorization: authorizationToken,
         },
@@ -45,6 +45,7 @@ const OrderManagement = () => {
 
       if (response.status === 200 && response.data.success) {
         const fetchedOrders = response.data.orders || []
+        console.log(`Order Data: `,fetchedOrders)
         setOrders(fetchedOrders)
       } else {
         throw new Error(response.data.message || "Failed to fetch orders")
@@ -69,18 +70,26 @@ const OrderManagement = () => {
   // Handle reorder functionality
   const handleReorder = (order) => {
     // Add all items from the order back to cart
-    order.items?.forEach((item) => {
-      addToCart(item)
+    order.products?.forEach((item) => {
+      if (item.product) {
+        addToCart({
+          ...item.product,
+          quantity: item.quantity
+        })
+      }
     })
     toast.success("Items added to cart!")
     navigate("/cart")
   }
 
   const getStatusColor = (status) => {
-    switch (status) {
+    const statusLower = status?.toLowerCase() || ""
+    
+    switch (statusLower) {
       case "delivered":
         return "bg-green-50 text-green-700 border-green-200"
       case "in-transit":
+      case "in transit":
         return "bg-blue-50 text-blue-700 border-blue-200"
       case "processing":
         return "bg-yellow-50 text-yellow-700 border-yellow-200"
@@ -92,10 +101,13 @@ const OrderManagement = () => {
   }
 
   const getStatusIcon = (status) => {
-    switch (status) {
+    const statusLower = status?.toLowerCase() || ""
+    
+    switch (statusLower) {
       case "delivered":
         return <CheckCircle className="h-4 w-4" />
       case "in-transit":
+      case "in transit":
         return <Truck className="h-4 w-4" />
       case "processing":
         return <Clock className="h-4 w-4" />
@@ -108,14 +120,14 @@ const OrderManagement = () => {
 
   const filteredOrders = orders.filter((order) => {
     if (activeTab === "all") return true
-    return order.status === activeTab
+    return order.status?.toLowerCase() === activeTab
   })
 
   const tabs = [
     { id: "all", name: "All Orders", count: orders.length },
-    { id: "processing", name: "Processing", count: orders.filter((o) => o.status === "processing").length },
-    { id: "in-transit", name: "In Transit", count: orders.filter((o) => o.status === "in-transit").length },
-    { id: "delivered", name: "Delivered", count: orders.filter((o) => o.status === "delivered").length },
+    { id: "processing", name: "Processing", count: orders.filter((o) => o.status?.toLowerCase() === "processing").length },
+    { id: "in-transit", name: "In Transit", count: orders.filter((o) => o.status?.toLowerCase() === "in-transit" || o.status?.toLowerCase() === "in transit").length },
+    { id: "delivered", name: "Delivered", count: orders.filter((o) => o.status?.toLowerCase() === "delivered").length },
   ]
 
   return (
@@ -260,7 +272,7 @@ const OrderManagement = () => {
                       </div>
                       <div>
                         <h3 className="text-lg font-bold text-gray-900 group-hover:text-purple-700 transition-colors">
-                          {order.vendorName || "Unknown Vendor"}
+                          {order.vendorId?.businessName || order.vendorName || "Unknown Vendor"}
                         </h3>
                         <p className="text-sm text-purple-600 font-medium mb-1">
                           Order #{order.id || order._id || "N/A"}
@@ -295,13 +307,13 @@ const OrderManagement = () => {
                       Order Items:
                     </h4>
                     <div className="flex flex-wrap gap-2">
-                      {order.items && order.items.length > 0 ? (
-                        order.items.map((item, index) => (
+                      {order.products && order.products.length > 0 ? (
+                        order.products.map((item, index) => (
                           <span
                             key={index}
                             className="px-3 py-2 bg-purple-50 text-purple-700 text-sm font-medium rounded-xl border border-purple-200"
                           >
-                            {typeof item === "string" ? item : item.name || "Unknown item"}
+                            {item.product?.name || "Unknown item"} ({item.quantity} {item.product?.unit || "units"})
                           </span>
                         ))
                       ) : (
@@ -315,11 +327,11 @@ const OrderManagement = () => {
                     <div className="flex items-center space-x-2">
                       <DollarSign className="h-5 w-5 text-green-600" />
                       <span className="text-xl font-bold bg-gradient-to-r from-[#4B0082] to-[#8A2BE2] bg-clip-text text-transparent">
-                        ₹{order.total || order.totalAmount || "0"}
+                        ₹{order.amount || order.total || order.totalAmount || "0"}
                       </span>
                     </div>
                     <div className="flex flex-wrap gap-3">
-                      {order.status === "delivered" && (
+                      {(order.status?.toLowerCase() === "delivered" || order.status === "Delivered") && (
                         <button
                           onClick={() => handleReorder(order)}
                           className="flex items-center space-x-2 px-4 py-2 bg-green-50 text-green-700 rounded-lg hover:bg-green-100 transition-colors border border-green-200"
@@ -332,14 +344,16 @@ const OrderManagement = () => {
                         <Phone className="h-4 w-4" />
                         <span className="font-medium">Contact</span>
                       </button>
-                      <button className="bg-gradient-to-r from-[#4B0082] to-[#8A2BE2] text-white px-6 py-2 rounded-lg font-semibold hover:from-[#5B1092] hover:to-[#9A3BF2] transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5">
+                      <Link 
+                        to={`/orders/${order._id}`}
+                        className="bg-gradient-to-r from-[#4B0082] to-[#8A2BE2] text-white px-6 py-2 rounded-lg font-semibold hover:from-[#5B1092] hover:to-[#9A3BF2] transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 inline-flex items-center justify-center">
                         View Details
-                      </button>
+                      </Link>
                     </div>
                   </div>
 
                   {/* Enhanced Delivery Info */}
-                  {order.status === "in-transit" && (
+                  {(order.status?.toLowerCase() === "in-transit" || order.status === "In Transit") && (
                     <div className="mt-4 p-4 bg-blue-50 rounded-xl border border-blue-200">
                       <div className="flex items-center space-x-2 text-blue-800">
                         <Truck className="h-5 w-5" />
@@ -351,7 +365,7 @@ const OrderManagement = () => {
                     </div>
                   )}
 
-                  {order.status === "processing" && (
+                  {(order.status?.toLowerCase() === "processing" || order.status === "Processing") && (
                     <div className="mt-4 p-4 bg-yellow-50 rounded-xl border border-yellow-200">
                       <div className="flex items-center space-x-2 text-yellow-800">
                         <Clock className="h-5 w-5" />
