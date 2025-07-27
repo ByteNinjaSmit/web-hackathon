@@ -245,9 +245,9 @@ export default function AdminLayout({ children }) {
   const { API, LogoutUser, isLoggedIn, isAdmin, isVendor } = useAuth()
 
 
-  if (!isLoggedIn) {
-    navigate("/adminlogin")
-  }
+  // if (!isLoggedIn) {
+  //   navigate("/adminlogin")
+  // }
 
 
   const logout = () => {
