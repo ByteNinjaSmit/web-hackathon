@@ -27,12 +27,13 @@ const CartProvider = ({ children }) => {
       if (itemIndex !== -1) {
         const updatedCart = [...prevCart];
 
-        // ⚠️ Just override with latest quantity, not add blindly
-        updatedCart[itemIndex].quantity = incomingQty;
-        toast.success("Dish successfully added to the Order.");
+        // Increase the quantity instead of overriding
+        updatedCart[itemIndex].quantity += incomingQty;
+        toast.success(`Increased ${newItem.name} quantity in cart`);
 
         return updatedCart;
       } else {
+        toast.success(`Added ${newItem.name} to cart`);
         return [...prevCart, { ...newItem, quantity: incomingQty }];
       }
     });

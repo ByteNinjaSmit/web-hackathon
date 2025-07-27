@@ -4,6 +4,7 @@ import { productApi } from '../../services/locationApi';
 import { MapPin, Package, Loader2, ArrowLeft, ShoppingCart } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import { useAuth } from '@/store/auth';
+import { useCart } from '@/store/cart';
 import { toast } from 'sonner';
 
 const VendorProducts = () => {
@@ -11,12 +12,12 @@ const VendorProducts = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { addToCart } = useCart();
   const vendor = location.state?.vendor;
   
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [cart, setCart] = useState([]);
 
   useEffect(() => {
     const fetchVendorProducts = async () => {
@@ -37,31 +38,26 @@ const VendorProducts = () => {
     }
   }, [vendorId]);
 
-  const addToCart = (product) => {
+  const handleAddToCart = (product) => {
     // Check if the current user's email matches the vendor's email
     if (user && user.email === vendor.email) {
       toast.error("You cannot add your own products to cart");
       return;
     }
     
-    // Add product to cart
-    setCart(prevCart => {
-      const existingItem = prevCart.find(item => item._id === product._id);
-      
-      if (existingItem) {
-        // Increase quantity if already in cart
-        toast.success(`Increased ${product.name} quantity in cart`);
-        return prevCart.map(item => 
-          item._id === product._id 
-            ? { ...item, quantity: item.quantity + 1 } 
-            : item
-        );
-      } else {
-        // Add new item to cart
-        toast.success(`Added ${product.name} to cart`);
-        return [...prevCart, { ...product, quantity: 1 }];
-      }
-    });
+    // Add product to cart using the cart context
+    // Make sure to include vendorId and vendorName for grouping in cart
+    const productWithVendor = {
+      ...product,
+      vendorId: vendorId,
+      vendorName: vendor?.businessName || vendor?.name || 'Unknown Vendor',
+      vendorImage: vendor?.category ? getCategoryIcon(vendor.category) : '🏪',
+      price: product.pricePerUnit, // Set price field for cart calculations
+      quantity: 1
+    };
+    
+    addToCart(productWithVendor);
+    // Toast is now handled in the addToCart function
   };
 
   return (
@@ -120,7 +116,7 @@ const VendorProducts = () => {
                 <ProductCard 
                   key={product._id} 
                   product={product} 
-                  onAddToCart={() => addToCart(product)}
+                  onAddToCart={() => handleAddToCart(product)}
                   vendorEmail={vendor?.email}
                   userEmail={user?.email}
                 />

@@ -11,6 +11,7 @@ import VendorMarketplace from './pages/client/VendorMarketplace';
 import Cart from './pages/client/Cart';
 import OrderManagement from './pages/client/OrderManagement';
 import PaymentIntegration from './pages/client/PaymentIntegration';
+import PaymentSuccess from './pages/client/PaymentSuccess';
 import ChatSupport from './pages/client/ChatSupport';
 import InventoryTracker from './pages/client/InventoryTracker';
 import ProfileManagement from './pages/client/ProfileManagement';
@@ -78,6 +79,7 @@ const App = () => {
           <Route path="/favorites" element={<Favorites />} />
           <Route path="/orders" element={<OrderManagement />} />
           <Route path="/payment" element={<PaymentIntegration />} />
+          <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/chat" element={<ChatSupport />} />
           <Route path="/inventory" element={<InventoryTracker />} />
           <Route path="/profile" element={<ProfileManagement />} />

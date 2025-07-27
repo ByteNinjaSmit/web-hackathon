@@ -9,7 +9,7 @@ import axios from 'axios';
 const Cart = () => {
   const navigate = useNavigate();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { cart, removeFromCart, clearCart, getTotalPrice, increaseQty, decreaseQty } = useCart();
+  const { cart, orderItems, removeFromCart, clearCart, getTotalPrice, increaseQty, decreaseQty } = useCart();
   const [promoCode, setPromoCode] = useState('');
   const { API, user, authorizationToken } = useAuth();
 
@@ -80,7 +80,7 @@ const Cart = () => {
         products: vendorGroup.items.map(item => ({
           product: item._id,
           quantity: item.quantity
-        })),
+        })), // Using the items from groupedItems to maintain vendor grouping
         amount: vendorGroup.subtotal,
         paymentMethod: 'Razorpay',
         deliveryType: 'Delivery',
