@@ -38,43 +38,28 @@ const vendorSchema = new mongoose.Schema({
   },
   // Updated location field to use GeoJSON format
   location: {
-    type: {
-      type: String,
-      enum: ['Point'],
-      default: 'Point'
-    },
-    coordinates: {
-      type: [Number], // [longitude, latitude]
-      required: true,
-      validate: {
-        validator: function(v) {
-          return v.length === 2 && 
-                 v[0] >= -180 && v[0] <= 180 && // longitude
-                 v[1] >= -90 && v[1] <= 90;     // latitude
-        },
-        message: 'Coordinates must be [longitude, latitude] with valid ranges'
-      }
-    } ,
-    fssaiNumber: {
-      type: String,
-      unique: true,
-      sparse: true, // Allows multiple documents to have a null value for this field
-      trim: true,
-    },
-    gstNumber: {
-      type: String,
-      unique: true,
-      sparse: true,
-      trim: true,
-    },
-    businessLicense: {
-      type: String,
-      unique: true,
-      sparse: true,
-      trim: true,
-    }, 
-    
+    lat: { type: Number },
+    lng: { type: Number },
   },
+  fssaiNumber: {
+    type: String,
+    unique: true,
+    sparse: true, // Allows multiple documents to have a null value for this field
+    trim: true,
+  },
+  gstNumber: {
+    type: String,
+    unique: true,
+    sparse: true,
+    trim: true,
+  },
+  businessLicense: {
+    type: String,
+    unique: true,
+    sparse: true,
+    trim: true,
+  },
+
   //   Add Address  related Fields
   address: {
     street: String,
@@ -83,10 +68,18 @@ const vendorSchema = new mongoose.Schema({
     zipCode: String,
     country: String,
   },
-  isVendor:{
-    type:Boolean,
-    default:true,
-  }
+  isVendor: {
+    type: Boolean,
+    default: true,
+  },
+  isVerified: {
+    type: Boolean,
+    default: false,
+  },
+  isRejected: {
+    type: Boolean,
+    default: false,
+  },
 });
 
 // Add 2dsphere index for geospatial queries
@@ -117,8 +110,20 @@ vendorSchema.methods.comparePassword = async function (password) {
   return bcrypt.compare(password, this.password);
 };
 
-// json web token
+// To Check Profile is Completed or not
+vendorSchema.virtual("isProfileComplete").get(function () {
+  return !!(
+    this.phone &&
+    this.businessName &&
+    this.address &&
+    this.address.street &&
+    this.location &&
+    typeof this.location.lat === "number" &&
+    typeof this.location.lng === "number"
+  );
+});
 
+// json web token
 vendorSchema.methods.generateToken = async function () {
   try {
     return jwt.sign(
@@ -136,10 +141,6 @@ vendorSchema.methods.generateToken = async function () {
     console.error(error);
   }
 };
-
-vendorSchema.virtual('isProfileComplete').get(function () {
-  return !!(this.phone && this.businessName && this.address && this.address.street && this.location && this.location.coordinates && this.location.coordinates.length === 2);
-});
 
 const Vendor = new mongoose.model("Vendors", vendorSchema);
 module.exports = Vendor;

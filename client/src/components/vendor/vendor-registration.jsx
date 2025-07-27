@@ -23,10 +23,10 @@ const Button = ({ children, className, variant, ...props }) => {
 
 const GoogleIcon = (props) => (
     <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" {...props}>
-        <path d="M22.56 12.25C22.56 11.45 22.48 10.65 22.34 9.87H12.24V14.4H18.06C17.74 16.03 16.85 17.41 15.48 18.32V20.8H19.08C21.28 18.94 22.56 15.89 22.56 12.25Z" fill="#4285F4"/>
-        <path d="M12.24 23C15.11 23 17.55 22.09 19.08 20.8L15.48 18.32C14.51 18.99 13.45 19.39 12.24 19.39C9.82 19.39 7.74 17.88 6.96 15.69H3.28V18.27C4.85 21.16 8.24 23 12.24 23Z" fill="#34A853"/>
-        <path d="M6.96 15.69C6.7 14.99 6.56 14.25 6.56 13.5C6.56 12.75 6.7 12.01 6.96 11.31V8.73H3.28C2.45 10.22 2 11.8 2 13.5C2 15.2 2.45 16.78 3.28 18.27L6.96 15.69Z" fill="#FBBC05"/>
-        <path d="M12.24 7.61C13.56 7.61 14.63 8.05 15.52 8.89L19.16 5.27C17.55 3.79 15.11 2.91 12.24 2.91C8.24 2.91 4.85 4.84 3.28 7.73L6.96 10.31C7.74 8.12 9.82 6.61 12.24 7.61Z" fill="#EA4335"/>
+        <path d="M22.56 12.25C22.56 11.45 22.48 10.65 22.34 9.87H12.24V14.4H18.06C17.74 16.03 16.85 17.41 15.48 18.32V20.8H19.08C21.28 18.94 22.56 15.89 22.56 12.25Z" fill="#4285F4" />
+        <path d="M12.24 23C15.11 23 17.55 22.09 19.08 20.8L15.48 18.32C14.51 18.99 13.45 19.39 12.24 19.39C9.82 19.39 7.74 17.88 6.96 15.69H3.28V18.27C4.85 21.16 8.24 23 12.24 23Z" fill="#34A853" />
+        <path d="M6.96 15.69C6.7 14.99 6.56 14.25 6.56 13.5C6.56 12.75 6.7 12.01 6.96 11.31V8.73H3.28C2.45 10.22 2 11.8 2 13.5C2 15.2 2.45 16.78 3.28 18.27L6.96 15.69Z" fill="#FBBC05" />
+        <path d="M12.24 7.61C13.56 7.61 14.63 8.05 15.52 8.89L19.16 5.27C17.55 3.79 15.11 2.91 12.24 2.91C8.24 2.91 4.85 4.84 3.28 7.73L6.96 10.31C7.74 8.12 9.82 6.61 12.24 7.61Z" fill="#EA4335" />
     </svg>
 );
 
@@ -53,7 +53,7 @@ export default function VendorRegistrationForm() {
         const { id, value } = e.target;
         setFormData((prev) => ({ ...prev, [id]: value }));
     };
-    
+
     const handleAddressChange = (e) => {
         const { id, value } = e.target;
         setFormData((prev) => ({ ...prev, address: { ...prev.address, [id]: value } }));
@@ -78,38 +78,20 @@ export default function VendorRegistrationForm() {
     // Google login response handler
     const responseGoogle = async (tokenResponse) => {
         try {
-            if (tokenResponse.code) {
+            if (tokenResponse["code"]) {
                 // Get user info from Google
                 const response = await axios.get(
-                    `${API}/api/auth/google-login?code=${tokenResponse.code}`
+                    `${API}/api/auth/vendor-google?code=${tokenResponse["code"]}`
                 );
-                
                 if (response.status === 200) {
                     const data = response.data;
-                    
-                    // Now register as vendor with Google data
-                    const vendorResponse = await axios.post(
-                        `${API}/api/auth/google-login-vendor`,
-                        {
-                            email: data.user.email,
-                            name: data.user.name,
-                            picture: data.user.profilePicture,
-                            // Include any additional fields that might be in the form
-                            phone: formData.phone || "",
-                            businessName: formData.businessName || "",
-                            address: formData.address || {},
-                            // Fix: Properly format location as GeoJSON
-                            location: {
-                                type: "Point",
-                                coordinates: formData.location?.coordinates || [0, 0] // Default coordinates if none provided
-                            }
-                        }
-                    );
-                    
-                    if (vendorResponse.status === 200) {
-                        toast.success("Google registration successful!");
-                        storeTokenInCookies(vendorResponse.data.token);
+                    toast.success("Google registration successful!");
+                    console.log(`Data: `, response.data)
+                    storeTokenInCookies(response.data.token);
+                    if (data.isProfileComplete) {
                         navigate("/vendordashboard");
+                    } else {
+                        navigate("/vendor-complete-profile");
                     }
                 }
             }
@@ -128,10 +110,7 @@ export default function VendorRegistrationForm() {
     // Google login hook
     const GoogleLogin = useGoogleLogin({
         onSuccess: responseGoogle,
-        onError: (error) => {
-            console.error("Google login error:", error);
-            toast.error("Google login failed. Please try again.");
-        },
+        onError: responseGoogle,
         flow: "auth-code",
     });
 
@@ -148,7 +127,7 @@ export default function VendorRegistrationForm() {
             // Make the API call to your backend
             const response = await axios.post(
                 `${API}/api/auth/vendor/register`,
-                formData
+                formData,
             );
 
             if (response.status === 200 || response.status === 201) {

@@ -22,9 +22,6 @@ const rejectVendor = new mongoose.Schema(
     },
     password: {
       type: String,
-      required: function () {
-        return !this.isGoogleAccount;
-      },
     },
     isGoogleAccount: {
       type: Boolean,
@@ -57,5 +54,5 @@ const rejectVendor = new mongoose.Schema(
   }
 );
 
-const RVendor = mongoose.model("RVendor", rejectVendor);
+const RVendor = new mongoose.model("RVendor", rejectVendor);
 module.exports = RVendor;

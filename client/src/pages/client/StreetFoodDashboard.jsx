@@ -11,7 +11,7 @@ import { locationSearch } from '@/services/locationApi';
 import Header from '@/components/layout/Header';
 
 const StreetFoodDashboard = () => {
-  const { isLoggedIn, user, API } = useAuth();
+  const { isLoggedIn, user, authorizationToken } = useAuth();
   const { location, loading: locationLoading, error: locationError, requestLocation } = useLocation();
   
   const [searchQuery, setSearchQuery] = useState('');
@@ -54,7 +54,6 @@ const StreetFoodDashboard = () => {
     setLoading(true);
     try {
       let data;
-      
       if (searchType === 'vendors') {
         data = await locationSearch.searchVendorsNearby({
           latitude: location.latitude,
@@ -62,7 +61,7 @@ const StreetFoodDashboard = () => {
           maxDistance,
           search: searchQuery || undefined,
           category: selectedCategory !== 'all' ? selectedCategory : undefined
-        });
+        }, isLoggedIn ? authorizationToken : null);
         setVendors(data.vendors || []);
         setProducts([]);
       } else {
@@ -72,7 +71,7 @@ const StreetFoodDashboard = () => {
           maxDistance,
           search: searchQuery || undefined,
           category: selectedCategory !== 'all' ? selectedCategory : undefined
-        });
+        }, isLoggedIn ? authorizationToken : null);
         setProducts(data.products || []);
         setVendors([]);
       }
@@ -104,6 +103,7 @@ const StreetFoodDashboard = () => {
   // Filter vendors/products based on search and category
   const filteredData = searchType === 'vendors' ? vendors : products;
 
+  // console.log(`Max Distance: `,maxDistance)
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
