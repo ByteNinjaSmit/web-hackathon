@@ -15,7 +15,7 @@ const CartProvider = ({ children }) => {
   }, [cart]);
   // Derived orderItems for backend
   const orderItems = cart.map((item) => ({
-    service: item._id, // backend expects _id as service
+    product: item._id, // backend expects _id as service
     quantity: item.quantity || 1, // default 1
   }));
 

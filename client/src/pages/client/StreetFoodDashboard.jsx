@@ -13,7 +13,6 @@ import Header from '@/components/layout/Header';
 const StreetFoodDashboard = () => {
   const { isLoggedIn, user, authorizationToken } = useAuth();
   const { location, loading: locationLoading, error: locationError, requestLocation } = useLocation();
-  
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [maxDistance, setMaxDistance] = useState(10); // Default 10km
@@ -22,6 +21,7 @@ const StreetFoodDashboard = () => {
   const [loading, setLoading] = useState(false);
   const [searchType, setSearchType] = useState('vendors'); // 'vendors' or 'products'
   const [showLocationPrompt, setShowLocationPrompt] = useState(false);
+  const [newLocation, setNewLocation] = useState({ lat: null, lng: null });
 
   const categories = [
     { id: 'all', name: 'All', icon: '🏪' },
@@ -43,35 +43,66 @@ const StreetFoodDashboard = () => {
 
   // Load data when search parameters change
   useEffect(() => {
-    if (location && (searchQuery || selectedCategory !== 'all')) {
+    if (newLocation.lat && newLocation.lng && (searchQuery || selectedCategory !== 'all')) {
       loadNearbyData();
     }
   }, [searchQuery, selectedCategory, maxDistance, searchType]);
 
+  // 🧭 Get geolocation on mount and whenever permission changes
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          const coords = { lat: latitude, lng: longitude };
+          setNewLocation(coords);
+          setFormData((prev) => ({ ...prev, location: coords }));
+          toast.success("Location captured!");
+        },
+        (error) => {
+          console.error('Geolocation error:', error);
+          toast.error("Could not get location. Check browser permissions.");
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 300000
+        }
+      );
+    } else {
+      toast.error("Geolocation not supported by your browser.");
+    }
+  }, []);
+
+  // 🔁 Load initial data when newLocation is available
+  useEffect(() => {
+    if (newLocation.lat && newLocation.lng) {
+      loadNearbyData();
+    }
+  }, [newLocation]);
+
+  // 📦 Load vendors/products based on newLocation
   const loadNearbyData = async () => {
-    if (!location) return;
+    if (!newLocation.lat || !newLocation.lng) return;
 
     setLoading(true);
     try {
       let data;
+
+      const query = {
+        latitude: newLocation.lat,
+        longitude: newLocation.lng,
+        maxDistance,
+        search: searchQuery || undefined,
+        category: selectedCategory !== 'all' ? selectedCategory : undefined
+      };
+
       if (searchType === 'vendors') {
-        data = await locationSearch.searchVendorsNearby({
-          latitude: location.latitude,
-          longitude: location.longitude,
-          maxDistance,
-          search: searchQuery || undefined,
-          category: selectedCategory !== 'all' ? selectedCategory : undefined
-        }, isLoggedIn ? authorizationToken : null);
+        data = await locationSearch.searchVendorsNearby(query, isLoggedIn ? authorizationToken : null);
         setVendors(data.vendors || []);
         setProducts([]);
       } else {
-        data = await locationSearch.searchProductsNearby({
-          latitude: location.latitude,
-          longitude: location.longitude,
-          maxDistance,
-          search: searchQuery || undefined,
-          category: selectedCategory !== 'all' ? selectedCategory : undefined
-        }, isLoggedIn ? authorizationToken : null);
+        data = await locationSearch.searchProductsNearby(query, isLoggedIn ? authorizationToken : null);
         setProducts(data.products || []);
         setVendors([]);
       }
@@ -107,7 +138,7 @@ const StreetFoodDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
-      
+
       {/* Location Prompt */}
       {showLocationPrompt && (
         <div className="bg-blue-50 border-b border-blue-200">
@@ -140,14 +171,14 @@ const StreetFoodDashboard = () => {
       )}
 
       {/* Location Status */}
-      {location && (
+      {newLocation && (
         <div className="bg-green-50 border-b border-green-200">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <MapPin className="h-4 w-4 text-green-600" />
                 <span className="text-sm text-green-800">
-                  Location: {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
+                  Location: {newLocation.lat}, {newLocation.lng}
                 </span>
               </div>
               <div className="flex items-center space-x-4">
@@ -164,21 +195,19 @@ const StreetFoodDashboard = () => {
                 <div className="flex space-x-1">
                   <button
                     onClick={() => setSearchType('vendors')}
-                    className={`px-3 py-1 rounded text-sm font-medium ${
-                      searchType === 'vendors' 
-                        ? 'bg-green-600 text-white' 
-                        : 'bg-white text-green-700 border border-green-300'
-                    }`}
+                    className={`px-3 py-1 rounded text-sm font-medium ${searchType === 'vendors'
+                      ? 'bg-green-600 text-white'
+                      : 'bg-white text-green-700 border border-green-300'
+                      }`}
                   >
                     Vendors
                   </button>
                   <button
                     onClick={() => setSearchType('products')}
-                    className={`px-3 py-1 rounded text-sm font-medium ${
-                      searchType === 'products' 
-                        ? 'bg-green-600 text-white' 
-                        : 'bg-white text-green-700 border border-green-300'
-                    }`}
+                    className={`px-3 py-1 rounded text-sm font-medium ${searchType === 'products'
+                      ? 'bg-green-600 text-white'
+                      : 'bg-white text-green-700 border border-green-300'
+                      }`}
                   >
                     Products
                   </button>
@@ -190,11 +219,11 @@ const StreetFoodDashboard = () => {
       )}
 
       <HeroSection searchQuery={searchQuery} setSearchQuery={setSearchQuery} />
-      
-      <CategoryList 
-        categories={categories} 
-        selectedCategory={selectedCategory} 
-        setSelectedCategory={setSelectedCategory} 
+
+      <CategoryList
+        categories={categories}
+        selectedCategory={selectedCategory}
+        setSelectedCategory={setSelectedCategory}
       />
 
       {/* Loading State */}
@@ -209,10 +238,10 @@ const StreetFoodDashboard = () => {
       {!loading && (
         <>
           {searchType === 'vendors' ? (
-            <VendorList 
-              filteredVendors={filteredData} 
-              categories={categories} 
-              selectedCategory={selectedCategory} 
+            <VendorList
+              filteredVendors={filteredData}
+              categories={categories}
+              selectedCategory={selectedCategory}
             />
           ) : (
             <ProductList products={filteredData} />
@@ -303,7 +332,7 @@ const ProductCard = ({ product }) => (
           <div className="text-xs text-gray-500">{product.unit}</div>
         </div>
       </div>
-      
+
       <div className="flex flex-wrap items-center space-x-4 mb-3 text-sm text-gray-600">
         <div className="flex items-center space-x-1">
           <MapPin className="h-4 w-4" />
