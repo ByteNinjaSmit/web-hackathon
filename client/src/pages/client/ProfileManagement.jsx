@@ -190,13 +190,13 @@ const Profile = () => {
       {
         id: 'upi1',
         name: 'Google Pay',
-        id: 'mahesh@okicici',
+        upiId: 'mahesh@okicici',
         isDefault: true
       },
       {
         id: 'upi2',
         name: 'PhonePe',
-        id: 'mahesh@ybl',
+        upiId: 'mahesh@ybl',
         isDefault: false
       }
     ]
