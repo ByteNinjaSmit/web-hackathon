@@ -25,9 +25,9 @@ import {
   CheckCircle,
   Truck,
   Calendar,
-  Eye,
   Building2,
 } from "lucide-react"
+
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -161,7 +161,6 @@ export default function VendorDashboardPage() {
     console.log("order data updated:", orders)
   }, [orders])
 
-
   // Function to fetch product statistics
   const fetchProductStats = async () => {
     try {
@@ -172,10 +171,27 @@ export default function VendorDashboardPage() {
     }
   }
 
+  // Add filtered products logic
+  const filteredProducts = products.filter((product) => {
+    // Handle search term filtering
+    let matchesSearch = true
+    if (searchTerm.trim() !== "") {
+      const searchLower = searchTerm.toLowerCase()
+      matchesSearch =
+        (product.name && product.name.toLowerCase().includes(searchLower)) ||
+        (product.category && product.category.toLowerCase().includes(searchLower)) ||
+        (product.description && product.description.toLowerCase().includes(searchLower))
+    }
+
+    // Handle category filtering
+    const matchesCategory = filterCategory === "all" || product.category === filterCategory
+
+    return matchesSearch && matchesCategory
+  })
+
   // Fixed filteredOrders logic - added debug logging and better error handling
   const filteredOrders = orders.filter((order) => {
     console.log("Filtering order:", order) // Debug log
-
     // Handle search term filtering with better null checks
     let matchesSearch = true
     if (orderSearchTerm.trim() !== "") {
@@ -317,10 +333,11 @@ export default function VendorDashboardPage() {
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl mb-2 transition-all duration-200 font-medium ${activeTab === item.id
-                ? "bg-white/20 text-white shadow-lg backdrop-blur-sm"
-                : "text-white/80 hover:bg-white/10 hover:text-white"
-                }`}
+              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl mb-2 transition-all duration-200 font-medium ${
+                activeTab === item.id
+                  ? "bg-white/20 text-white shadow-lg backdrop-blur-sm"
+                  : "text-white/80 hover:bg-white/10 hover:text-white"
+              }`}
             >
               <item.icon className="w-5 h-5" />
               <span>{item.label}</span>
@@ -695,7 +712,6 @@ export default function VendorDashboardPage() {
                     </CardContent>
                   </Card>
 
-                  {/* Enhanced Products Grid */}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredProducts.map((product) => (
                       <Card
@@ -808,25 +824,6 @@ export default function VendorDashboardPage() {
 
           {activeTab === "orders" && (
             <div className="space-y-6">
-              {/* Debug Information */}
-              {/* <Card className="border-yellow-200 bg-yellow-50">
-                <CardContent className="p-4">
-                  <h3 className="font-semibold text-yellow-800 mb-2">Debug Information:</h3>
-                  <p className="text-sm text-yellow-700">
-                    Total orders in state: <strong>{orders.length}</strong>
-                  </p>
-                  <p className="text-sm text-yellow-700">
-                    Filtered orders: <strong>{filteredOrders.length}</strong>
-                  </p>
-                  <p className="text-sm text-yellow-700">
-                    Search term: <strong>"{orderSearchTerm}"</strong>
-                  </p>
-                  <p className="text-sm text-yellow-700">
-                    Filter status: <strong>{orderFilterStatus}</strong>
-                  </p>
-                </CardContent>
-              </Card> */}
-
               {isOrdersLoading ? (
                 <div className="flex items-center justify-center h-64">
                   <div className="text-center">
@@ -937,7 +934,6 @@ export default function VendorDashboardPage() {
                             </div>
                           </div>
 
-
                           <div className="p-3 bg-green-50 rounded-xl mb-4">
                             <div className="flex items-center space-x-2 mb-2">
                               <Building2 className="h-4 w-4 text-green-600" />
@@ -956,11 +952,10 @@ export default function VendorDashboardPage() {
                             </div>
                             <p className="text-sm text-gray-900 font-medium">
                               {order.deliveryAddressSnapshot
-                                ? `${order.deliveryAddressSnapshot.street || ''}, ${order.deliveryAddressSnapshot.city || ''}, ${order.deliveryAddressSnapshot.state || ''}`
-                                : 'No delivery address provided'}
+                                ? `${order.deliveryAddressSnapshot.street || ""}, ${order.deliveryAddressSnapshot.city || ""}, ${order.deliveryAddressSnapshot.state || ""}`
+                                : "No delivery address provided"}
                             </p>
                           </div>
-
 
                           {/* Order Items */}
                           <div className="mb-4">
@@ -993,48 +988,48 @@ export default function VendorDashboardPage() {
                                   No items found for this order
                                 </div>
                               )}
-
                             </div>
                           </div>
+
                           {/* Order Details Section */}
                           <div className="p-4 border border-blue-300 rounded-xl mb-4 space-y-2 bg-blue-100">
                             <h4 className="text-md font-semibold text-gray-800">Order Details</h4>
-
                             <div className="text-sm text-gray-700 grid grid-cols-1 md:grid-cols-2 gap-y-2 gap-x-4">
                               <div className="flex justify-between">
                                 <span className="font-medium">Order ID:</span>
                                 <span className="text-gray-900 truncate max-w-[200px] text-right">{order._id}</span>
                               </div>
-
                               <div className="flex justify-between">
                                 <span className="font-medium">Created At:</span>
-                                <span className="text-gray-900 text-right">{new Date(order.createdAt).toLocaleString()}</span>
+                                <span className="text-gray-900 text-right">
+                                  {new Date(order.createdAt).toLocaleString()}
+                                </span>
                               </div>
-
                               <div className="flex justify-between">
                                 <span className="font-medium">Delivery Type:</span>
                                 <span className="text-gray-900 text-right">{order.deliveryType || "N/A"}</span>
                               </div>
-
                               <div className="flex justify-between">
                                 <span className="font-medium">Payment Method:</span>
                                 <span className="text-gray-900 text-right">{order.paymentMethod || "N/A"}</span>
                               </div>
-
                               <div className="flex justify-between">
                                 <span className="font-medium">Payment ID:</span>
-                                <span className="text-gray-900 truncate max-w-[200px] text-right">{order.paymentId || "N/A"}</span>
+                                <span className="text-gray-900 truncate max-w-[200px] text-right">
+                                  {order.paymentId || "N/A"}
+                                </span>
                               </div>
-
                               <div className="flex justify-between">
                                 <span className="font-medium">Payment Order ID:</span>
-                                <span className="text-gray-900 truncate max-w-[200px] text-right">{order.paymentOrderId || "N/A"}</span>
+                                <span className="text-gray-900 truncate max-w-[200px] text-right">
+                                  {order.paymentOrderId || "N/A"}
+                                </span>
                               </div>
                             </div>
                           </div>
 
                           {/* Action Buttons */}
-                          <div className="flex flex-wrap gap-3 pt-4 border-t  border-gray-100">
+                          <div className="flex flex-wrap gap-3 pt-4 border-t border-gray-100">
                             {order.status === "pending" && (
                               <Button
                                 size="sm"
