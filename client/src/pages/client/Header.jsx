@@ -3,9 +3,11 @@
 import { useState } from "react"
 import { Truck, Bell, ShoppingCart, User, Menu, X } from "lucide-react"
 import { Link } from "react-router-dom"
+import { useAuth } from "@/store/auth"
 
 const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const { API, isLoggedIn } = useAuth()
 
   return (
     <header className="bg-white shadow-lg border-b border-purple-100 sticky top-0 z-50">
@@ -72,13 +74,22 @@ const Header = () => {
             >
               <ShoppingCart className="h-5 w-5" />
             </Link>
-            <Link
+
+            {isLoggedIn ? <Link
               to="/profile"
               className="flex items-center space-x-2 bg-gradient-to-r from-[#4B0082] to-[#8A2BE2] text-white px-4 py-2 rounded-lg hover:from-[#5B1092] hover:to-[#9A3BF2] transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
             >
               <User className="h-4 w-4" />
               <span className="hidden sm:block font-medium">Profile</span>
             </Link>
+              : <Link
+                to="/login"
+                className="flex items-center space-x-2 bg-gradient-to-r from-[#4B0082] to-[#8A2BE2] text-white px-4 py-2 rounded-lg hover:from-[#5B1092] hover:to-[#9A3BF2] transition-all duration-200 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+              >
+                <User className="h-4 w-4" />
+                <span className="hidden sm:block font-medium">Login</span>
+              </Link>
+            }
 
             {/* Mobile Menu Button */}
             <button
