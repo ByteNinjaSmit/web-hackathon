@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.post("/", orderController.placeOrder);
 router.get("/user", authMiddleware, orderController.getUserOrders);
-router.get("/vendor", orderController.getVendorOrders);
+router.get("/vendor",authMiddleware, orderController.getVendorOrders);
 router.patch("/:id/status", orderController.updateOrderStatus);
 router.delete("/:id", orderController.deleteOrder);
 

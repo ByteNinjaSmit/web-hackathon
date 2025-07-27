@@ -68,9 +68,13 @@ const getVendorOrders = async (req, res, next) => {
     const filter = { vendorId, isDeleted: { $ne: true } };
     if (status) filter.status = status;
     const orders = await Order.find(filter)
+      .populate("buyer", "-password -__v") 
+      .populate("products.product")
+      .populate("vendorId", "-password -__v") 
       .sort(sort)
       .skip(Number(skip))
       .limit(Number(limit));
+
     const total = await Order.countDocuments(filter);
     res.json({ success: true, orders, total });
   } catch (error) {

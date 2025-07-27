@@ -45,6 +45,7 @@ import AdminProfile from "./pages/admin/Admin-Profile";
 import UserManagement from "./pages/admin/Admin-Users";
 
 import Users from "./pages/admin/Admin-Users";
+import Help from "./pages/client/Help";
 
 // ProtectedRoute component
 const ProtectedRoute = ({ children }) => {
@@ -70,6 +71,7 @@ const App = () => {
 
           <Route path="/" element={<StreetFoodDashboard />} />
           <Route path="/home" element={<StreetFoodDashboard />} />
+          <Route path="/help" element={<Help />} />
           <Route path="/login" element={<GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}><Login /></GoogleOAuthProvider>} />
           <Route path="/register" element={<GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}><Signup /></GoogleOAuthProvider>} />
 
