@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import { productApi } from '../../services/locationApi';
 import { MapPin, Package, Loader2, ArrowLeft, ShoppingCart } from 'lucide-react';
-import Header from '@/components/layout/Header';
+import Header from './Header';
 import { useAuth } from '@/store/auth';
 import { useCart } from '@/store/cart';
 import { toast } from 'sonner';
