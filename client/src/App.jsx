@@ -10,6 +10,7 @@ import OTPVerification from './pages/client/OTPVerification';
 import VendorMarketplace from './pages/client/VendorMarketplace';
 import Cart from './pages/client/Cart';
 import OrderManagement from './pages/client/OrderManagement';
+import OrderDetail from './components/orders/OrderDetail';
 import PaymentIntegration from './pages/client/PaymentIntegration';
 import PaymentSuccess from './pages/client/PaymentSuccess';
 import ChatSupport from './pages/client/ChatSupport';
@@ -78,6 +79,7 @@ const App = () => {
           <Route path="/cart" element={<Cart />} />
           <Route path="/favorites" element={<Favorites />} />
           <Route path="/orders" element={<OrderManagement />} />
+          <Route path="/orders/:orderId" element={<OrderDetail />} />
           <Route path="/payment" element={<PaymentIntegration />} />
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/chat" element={<ChatSupport />} />

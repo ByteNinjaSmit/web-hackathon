@@ -29,6 +29,7 @@ const reviewRouter = require("./routes/review-router");
 const vendorRouter = require("./routes/vendor-router");
 const adminRouter = require("./routes/admin-routes");
 const paymentRouter = require("./routes/payment-router");
+const userRouter = require("./routes/user-router");
 
 
 // Middleware
@@ -194,6 +195,7 @@ app.use("/api/orders", orderRouter);
 app.use("/api/reviews", reviewRouter);
 app.use("/api/vendors", vendorRouter);
 app.use("/api/payment", paymentRouter);
+app.use("/api/users", userRouter);
 
 // Broadcaster
 app.set("io", io);

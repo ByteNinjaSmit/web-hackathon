@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, MapPin, Star, Clock, Phone, ShoppingCart, Bell, User, Menu, X, Truck, Edit3, Save, Camera, Package, Heart, CreditCard, Settings, LogOut, Shield, Calendar, AlertCircle, CheckCircle, Trash2, Plus, ChevronRight, Eye, RotateCcw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../store/auth';
+import OrderHistory from '../../components/profile/OrderHistory';
 
 const Profile = () => {
   const { user, isGoogleAccount, isProfileComplete, updateProfile, isLoading, LogoutUser } = useAuth();
@@ -67,64 +68,8 @@ const Profile = () => {
     loyaltyPoints: 1250
   };
   
-  // Dummy order history data
-  const orderHistory = [
-    {
-      id: 'ORD-2024-001',
-      date: '2024-04-15',
-      vendor: 'Fresh Veggie Hub',
-      vendorImage: '🥦',
-      items: [
-        { name: 'Onions', quantity: 2, price: 40 },
-        { name: 'Tomatoes', quantity: 1, price: 30 },
-        { name: 'Potatoes', quantity: 3, price: 60 }
-      ],
-      total: 130,
-      status: 'delivered',
-      deliveryAddress: 'Shop 15, Main Market, Sector 18, Pune'
-    },
-    {
-      id: 'ORD-2024-002',
-      date: '2024-04-10',
-      vendor: 'Spice Kingdom',
-      vendorImage: '🌶️',
-      items: [
-        { name: 'Garam Masala', quantity: 1, price: 120 },
-        { name: 'Turmeric', quantity: 1, price: 80 },
-        { name: 'Red Chili', quantity: 2, price: 60 }
-      ],
-      total: 260,
-      status: 'delivered',
-      deliveryAddress: 'Shop 15, Main Market, Sector 18, Pune'
-    },
-    {
-      id: 'ORD-2024-003',
-      date: '2024-04-05',
-      vendor: 'Dairy Fresh',
-      vendorImage: '🥛',
-      items: [
-        { name: 'Milk', quantity: 2, price: 60 },
-        { name: 'Paneer', quantity: 1, price: 80 },
-        { name: 'Butter', quantity: 1, price: 120 }
-      ],
-      total: 260,
-      status: 'delivered',
-      deliveryAddress: 'Shop 15, Main Market, Sector 18, Pune'
-    },
-    {
-      id: 'ORD-2024-004',
-      date: '2024-03-28',
-      vendor: 'Oil & Essentials',
-      vendorImage: '🛢️',
-      items: [
-        { name: 'Cooking Oil', quantity: 1, price: 180 },
-        { name: 'Ghee', quantity: 1, price: 320 }
-      ],
-      total: 500,
-      status: 'delivered',
-      deliveryAddress: 'Shop 15, Main Market, Sector 18, Pune'
-    }
-  ];
+  // Order history is now handled by the OrderHistory component
+
   
   // Dummy favorites data
   const favorites = [
@@ -673,83 +618,7 @@ const Profile = () => {
                 </div>
               </div>
             )}
-            {activeTab === 'orders' && (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200">
-                <div className="px-6 py-4 border-b border-gray-200">
-                  <h3 className="text-lg font-semibold text-gray-900">Order History</h3>
-                </div>
-                
-                <div className="divide-y divide-gray-200">
-                  {orderHistory.length > 0 ? (
-                    orderHistory.map((order) => (
-                      <div key={order.id} className="p-6">
-                        <div className="flex justify-between items-start mb-4">
-                          <div className="flex items-center space-x-3">
-                            <div className="text-3xl">{order.vendorImage}</div>
-                            <div>
-                              <h4 className="font-medium text-gray-900">{order.vendor}</h4>
-                              <p className="text-sm text-gray-600">{order.id} • {new Date(order.date).toLocaleDateString()}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <span className={`px-3 py-1 rounded-full text-xs font-medium ${order.status === 'delivered' ? 'bg-green-100 text-green-800' : 'bg-yellow-100 text-yellow-800'}`}>
-                              {order.status === 'delivered' ? (
-                                <span className="flex items-center">
-                                  <CheckCircle className="h-3 w-3 mr-1" />
-                                  Delivered
-                                </span>
-                              ) : (
-                                <span className="flex items-center">
-                                  <Clock className="h-3 w-3 mr-1" />
-                                  Processing
-                                </span>
-                              )}
-                            </span>
-                          </div>
-                        </div>
-                        
-                        <div className="space-y-2 mb-4">
-                          {order.items.map((item, index) => (
-                            <div key={index} className="flex justify-between text-sm">
-                              <span className="text-gray-600">{item.quantity}x {item.name}</span>
-                              <span className="text-gray-900">₹{item.price}</span>
-                            </div>
-                          ))}
-                        </div>
-                        
-                        <div className="flex justify-between items-center pt-3 border-t border-gray-100">
-                          <div>
-                            <span className="text-sm text-gray-600">Total:</span>
-                            <span className="ml-2 font-medium text-gray-900">₹{order.total}</span>
-                          </div>
-                          
-                          <div className="flex space-x-3">
-                            <button className="flex items-center space-x-1 text-purple-600 hover:text-purple-700">
-                              <Eye className="h-4 w-4" />
-                              <span className="text-sm">Details</span>
-                            </button>
-                            <button className="flex items-center space-x-1 text-purple-600 hover:text-purple-700">
-                              <RotateCcw className="h-4 w-4" />
-                              <span className="text-sm">Reorder</span>
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="p-6 text-center">
-                      <Package className="h-12 w-12 text-gray-300 mx-auto mb-3" />
-                      <h4 className="text-lg font-medium text-gray-900 mb-1">No orders yet</h4>
-                      <p className="text-gray-600 mb-4">You haven't placed any orders yet.</p>
-                      <Link to="/" className="inline-flex items-center space-x-2 text-purple-600 hover:text-purple-700">
-                        <ShoppingCart className="h-4 w-4" />
-                        <span>Start Shopping</span>
-                      </Link>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
+            {activeTab === 'orders' && <OrderHistory />}
             {activeTab === 'favorites' && (
               <div className="bg-white rounded-xl shadow-sm border border-gray-200">
                 <div className="px-6 py-4 border-b border-gray-200">
