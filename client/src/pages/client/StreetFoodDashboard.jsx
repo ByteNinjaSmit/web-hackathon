@@ -10,7 +10,7 @@ import { MapPin, Filter, Package, Loader2, Navigation, X } from "lucide-react"
 import { useAuth } from "@/store/auth"
 import { useLocation } from "@/hooks/use-location"
 import { locationSearch } from "@/services/locationApi"
-import Header from "@/components/layout/Header"
+import Header from "./Header"
 
 const StreetFoodDashboard = () => {
   const { isLoggedIn, user, authorizationToken } = useAuth()
