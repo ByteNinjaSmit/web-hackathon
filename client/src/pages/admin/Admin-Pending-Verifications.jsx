@@ -41,8 +41,8 @@ export default function EnhancedPendingVerifications() {
 
   const filteredSuppliers = pendingSuppliers.filter((supplier) => {
     const matchesSearch =
-      supplier.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      supplier.contactPerson.toLowerCase().includes(searchTerm.toLowerCase())
+      supplier.companyName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      supplier.contactPerson?.toLowerCase().includes(searchTerm.toLowerCase())
     const matchesStatus = statusFilter === "all" || supplier.status === statusFilter
     return matchesSearch && matchesStatus
   })
