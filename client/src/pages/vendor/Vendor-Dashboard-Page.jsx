@@ -1,3 +1,5 @@
+"use client"
+
 import { useState, useEffect } from "react"
 import {
   Store,
@@ -17,7 +19,10 @@ import {
   TrendingUp,
   Save,
   AlertCircle,
-  Loader2
+  Loader2,
+  Bell,
+  Menu,
+  FileText,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -41,7 +46,6 @@ import { vendorProductApi } from "@/services/vendorProductApi"
 import { toast } from "react-toastify"
 import axios from "axios"
 
-
 const categories = ["Vegetables", "Fruits", "Dairy", "Grains", "Spices", "Condiments", "Meat", "Other"]
 const units = ["kg", "litre", "packet", "piece", "bottle"]
 
@@ -49,7 +53,7 @@ export default function VendorDashboardPage() {
   const [mounted, setMounted] = useState(false)
   const [activeTab, setActiveTab] = useState("overview")
   const [products, setProducts] = useState([])
-  const { user, LogoutUser, authorizationToken, API } = useAuth();
+  const { user, LogoutUser, authorizationToken, API } = useAuth()
   const [searchTerm, setSearchTerm] = useState("")
   const [filterCategory, setFilterCategory] = useState("all")
   const [isProductDialogOpen, setIsProductDialogOpen] = useState(false)
@@ -60,7 +64,7 @@ export default function VendorDashboardPage() {
   const [productStats, setProductStats] = useState({
     totalProducts: 0,
     totalValue: 0,
-    availableProducts: 0
+    availableProducts: 0,
   })
 
   // State for vendor information
@@ -104,13 +108,13 @@ export default function VendorDashboardPage() {
     setIsLoading(true)
     setIsError(false)
     try {
-      const response = await axios.get(`${API}/api/vendors/own-products`,{
+      const response = await axios.get(`${API}/api/vendors/own-products`, {
         headers: {
           Authorization: authorizationToken,
-        },withCredentials:true,
-      });
-      if(response.status===200){
-        // console.log(`Response Data Product: `,response.data.products)
+        },
+        withCredentials: true,
+      })
+      if (response.status === 200) {
         setProducts(response.data.products)
       }
     } catch (error) {
@@ -132,26 +136,25 @@ export default function VendorDashboardPage() {
     }
   }
 
-  const filteredProducts = products && products.length > 0 ? products.filter((product) => {
-    const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesCategory = filterCategory === "all" || product.category === filterCategory
-    return matchesSearch && matchesCategory
-  }) : []
+  const filteredProducts =
+    products && products.length > 0
+      ? products.filter((product) => {
+          const matchesSearch = product.name.toLowerCase().includes(searchTerm.toLowerCase())
+          const matchesCategory = filterCategory === "all" || product.category === filterCategory
+          return matchesSearch && matchesCategory
+        })
+      : []
 
   const handleProductSubmit = async (e) => {
     e.preventDefault()
     try {
       if (editingProduct) {
-        // Update existing product
         await vendorProductApi.updateProduct(editingProduct._id, productForm, authorizationToken)
         toast.success("Product updated successfully")
       } else {
-        // Add new product
         await vendorProductApi.addProduct(productForm, authorizationToken)
         toast.success("Product added successfully")
       }
-
-      // Refresh products list and stats
       fetchProducts()
       fetchProductStats()
       resetProductForm()
@@ -196,7 +199,7 @@ export default function VendorDashboardPage() {
 
   // These values will be used as fallbacks if the API stats are not available
   const calculatedTotalProducts = products.length
-  const calculatedTotalValue = products.reduce((sum, product) => sum + (product.stockQuantity * product.pricePerUnit), 0)
+  const calculatedTotalValue = products.reduce((sum, product) => sum + product.stockQuantity * product.pricePerUnit, 0)
   const calculatedAvailableProducts = products.filter((p) => p.isAvailable).length
 
   // Use API stats if available, otherwise use calculated values
@@ -205,10 +208,10 @@ export default function VendorDashboardPage() {
   const availableProducts = productStats?.availableProducts || calculatedAvailableProducts
 
   const sidebarItems = [
-    { id: "overview", label: "Overview", icon: BarChart3 },
-    { id: "products", label: "Products", icon: Package },
-    { id: "profile", label: "Profile", icon: User },
-    { id: "settings", label: "Settings", icon: Settings },
+    { id: "overview", label: "Dashboard", icon: BarChart3 },
+    { id: "products", label: "Product Management", icon: Package },
+    { id: "profile", label: "Business Profile", icon: User },
+    { id: "settings", label: "Account Settings", icon: Settings },
   ]
 
   if (!mounted) return null
@@ -216,56 +219,113 @@ export default function VendorDashboardPage() {
   return (
     <div className="min-h-screen bg-gray-50 flex">
       {/* Sidebar */}
-      <div className="w-64 bg-gradient-to-b from-[#4B0082] to-[#8A2BE2] text-white flex flex-col">
-        <div className="p-6 border-b border-white/20">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-              <Store className="w-6 h-6" />
+      <div className="w-80 bg-gradient-to-b from-[#8B5CF6] via-[#7C3AED] to-[#6D28D9] text-white flex flex-col">
+        {/* Logo Section */}
+        <div className="p-6 border-b border-white/10">
+          <div className="flex items-center space-x-3 mb-6">
+            <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm">
+              <Store className="w-7 h-7" />
             </div>
             <div>
-              <h2 className="font-bold text-lg">Vendor Portal</h2>
-              <p className="text-white/80 text-sm">{vendor.businessName}</p>
+              <h2 className="font-bold text-xl">Vendor Portal</h2>
+              <p className="text-white/80 text-sm">Street Food Platform</p>
             </div>
+          </div>
+
+          {/* Welcome Card */}
+          <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+            <h3 className="font-semibold text-lg mb-1">Welcome back, {user?.name?.split(" ")[0] || "Vendor"}</h3>
+            <p className="text-white/80 text-sm">Manage your product inventory and business</p>
           </div>
         </div>
 
+        {/* Navigation */}
         <nav className="flex-1 p-4">
-          {sidebarItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg mb-2 transition-all duration-200 ${activeTab === item.id ? "bg-white/20 text-white" : "text-white/80 hover:bg-white/10 hover:text-white"
+          <div className="space-y-2">
+            {sidebarItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveTab(item.id)}
+                className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl transition-all duration-200 ${
+                  activeTab === item.id
+                    ? "bg-white/20 text-white shadow-lg backdrop-blur-sm border border-white/30"
+                    : "text-white/80 hover:bg-white/10 hover:text-white"
                 }`}
-            >
-              <item.icon className="w-5 h-5" />
-              <span>{item.label}</span>
-            </button>
-          ))}
+              >
+                <item.icon className="w-5 h-5" />
+                <span className="font-medium">{item.label}</span>
+              </button>
+            ))}
+          </div>
         </nav>
+
+        {/* User Profile Section */}
+        <div className="p-4 border-t border-white/10">
+          <div className="flex items-center space-x-3 p-3 rounded-xl bg-white/10 backdrop-blur-sm">
+            <div className="w-10 h-10 bg-gradient-to-br from-white/30 to-white/10 rounded-full flex items-center justify-center">
+              <span className="text-sm font-bold">{user?.name?.charAt(0) || "V"}</span>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-medium text-sm truncate">{user?.name || "Vendor User"}</p>
+              <p className="text-white/70 text-xs truncate">{user?.email}</p>
+            </div>
+            <Settings className="w-4 h-4 text-white/60" />
+          </div>
+        </div>
       </div>
 
       {/* Main Content */}
       <div className="flex-1 overflow-auto">
-        <div className="p-8">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">
-              {activeTab === "overview" && "Dashboard Overview"}
-              {activeTab === "products" && "Product Management"}
-              {activeTab === "profile" && "Vendor Profile"}
-              {activeTab === "settings" && "Settings"}
-            </h1>
-            <p className="text-gray-600">
-              {activeTab === "overview" && "Monitor your business performance and key metrics"}
-              {activeTab === "products" && "Manage your product inventory and listings"}
-              {activeTab === "profile" && "Update your business information and contact details"}
-              {activeTab === "settings" && "Configure your account preferences"}
-            </p>
-          </div>
+        {/* Header */}
+        <div className="bg-white border-b border-gray-200 px-8 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Button variant="ghost" size="icon" className="md:hidden">
+                <Menu className="w-5 h-5" />
+              </Button>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">Vendor Dashboard</h1>
+                <p className="text-gray-600 text-sm">Street Food Platform</p>
+              </div>
+            </div>
 
+            <div className="flex items-center space-x-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                <Input placeholder="Search products, orders..." className="pl-10 w-80 bg-gray-50 border-gray-200" />
+              </div>
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="w-5 h-5" />
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                  2
+                </span>
+              </Button>
+              <div className="w-8 h-8 bg-gradient-to-br from-[#8B5CF6] to-[#6D28D9] rounded-full flex items-center justify-center">
+                <span className="text-white text-sm font-bold">{user?.name?.charAt(0) || "V"}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="p-8">
           {/* Overview Tab */}
           {activeTab === "overview" && (
-            <div className="space-y-6">
+            <div className="space-y-8">
+              {/* Page Header */}
+              <div className="text-center">
+                <div className="w-20 h-20 bg-gradient-to-br from-[#8B5CF6] to-[#6D28D9] rounded-full flex items-center justify-center mx-auto mb-6">
+                  <BarChart3 className="w-10 h-10 text-white" />
+                </div>
+                <h1 className="text-4xl font-bold text-gray-900 mb-4">Dashboard Overview</h1>
+                <p className="text-gray-600 text-lg max-w-2xl mx-auto">
+                  Monitor your business performance and product inventory with real-time insights
+                </p>
+                <Button className="mt-6 bg-gradient-to-r from-[#8B5CF6] to-[#6D28D9] hover:from-[#7C3AED] hover:to-[#5B21B6] px-8 py-3 text-lg">
+                  <FileText className="w-5 h-5 mr-2" />
+                  Generate Report
+                </Button>
+              </div>
+
               {isLoading ? (
                 <div className="flex items-center justify-center h-64">
                   <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
@@ -279,54 +339,95 @@ export default function VendorDashboardPage() {
               ) : (
                 <>
                   {/* Stats Cards */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <Card>
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Products</CardTitle>
-                        <Package className="h-4 w-4 text-muted-foreground" />
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold">{totalProducts}</div>
-                        <p className="text-xs text-muted-foreground">{availableProducts} available</p>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <Card className="relative overflow-hidden border-0 shadow-lg">
+                      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-orange-400 to-orange-500"></div>
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="w-12 h-12 bg-orange-100 rounded-full flex items-center justify-center">
+                            <Package className="w-6 h-6 text-orange-600" />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-gray-600 font-medium">Total Products</p>
+                          <p className="text-3xl font-bold text-gray-900">{totalProducts}</p>
+                          <p className="text-sm text-green-600 flex items-center">
+                            <TrendingUp className="w-4 h-4 mr-1" />+{availableProducts} available
+                          </p>
+                        </div>
                       </CardContent>
                     </Card>
 
-                    <Card>
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Total Inventory Value</CardTitle>
-                        <DollarSign className="h-4 w-4 text-muted-foreground" />
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold">₹{totalValue.toLocaleString()}</div>
-                        <p className="text-xs text-muted-foreground">Across all products</p>
+                    <Card className="relative overflow-hidden border-0 shadow-lg">
+                      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-green-400 to-green-500"></div>
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center">
+                            <DollarSign className="w-6 h-6 text-green-600" />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-gray-600 font-medium">Inventory Value</p>
+                          <p className="text-3xl font-bold text-gray-900">₹{totalValue.toLocaleString()}</p>
+                          <p className="text-sm text-green-600 flex items-center">
+                            <TrendingUp className="w-4 h-4 mr-1" />
+                            +5% this week
+                          </p>
+                        </div>
                       </CardContent>
                     </Card>
 
-                    <Card>
-                      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                        <CardTitle className="text-sm font-medium">Business Status</CardTitle>
-                        <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                      </CardHeader>
-                      <CardContent>
-                        <div className="text-2xl font-bold text-green-600">Active</div>
-                        <p className="text-xs text-muted-foreground">All systems operational</p>
+                    <Card className="relative overflow-hidden border-0 shadow-lg">
+                      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-400 to-blue-500"></div>
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
+                            <Store className="w-6 h-6 text-blue-600" />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-gray-600 font-medium">Business Status</p>
+                          <p className="text-3xl font-bold text-green-600">Active</p>
+                          <p className="text-sm text-gray-600">All systems operational</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+
+                    <Card className="relative overflow-hidden border-0 shadow-lg">
+                      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-400 to-purple-500"></div>
+                      <CardContent className="p-6">
+                        <div className="flex items-center justify-between mb-4">
+                          <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center">
+                            <BarChart3 className="w-6 h-6 text-purple-600" />
+                          </div>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-gray-600 font-medium">Avg. Stock Level</p>
+                          <p className="text-3xl font-bold text-gray-900">85%</p>
+                          <p className="text-sm text-gray-600">Well stocked</p>
+                        </div>
                       </CardContent>
                     </Card>
                   </div>
 
                   {/* Recent Products */}
-                  <Card>
+                  <Card className="border-0 shadow-lg">
                     <CardHeader>
-                      <CardTitle>Recent Products</CardTitle>
+                      <CardTitle className="text-xl">Recent Products</CardTitle>
                       <CardDescription>Your latest product listings</CardDescription>
                     </CardHeader>
                     <CardContent>
                       {products.length === 0 ? (
-                        <div className="text-center py-6 text-gray-500">
-                          <Package className="h-12 w-12 mx-auto mb-2 opacity-30" />
-                          <p>No products available. Add your first product to get started.</p>
+                        <div className="text-center py-12">
+                          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                            <Package className="w-8 h-8 text-gray-400" />
+                          </div>
+                          <h3 className="text-lg font-medium text-gray-900 mb-2">No products available</h3>
+                          <p className="text-gray-600 mb-6">
+                            Add your first product to get started with your inventory.
+                          </p>
                           <Button
-                            className="mt-4 bg-gradient-to-r from-[#4B0082] to-[#8A2BE2]"
+                            className="bg-gradient-to-r from-[#8B5CF6] to-[#6D28D9] hover:from-[#7C3AED] hover:to-[#5B21B6]"
                             onClick={() => {
                               setIsProductDialogOpen(true)
                               setActiveTab("products")
@@ -339,18 +440,21 @@ export default function VendorDashboardPage() {
                       ) : (
                         <div className="space-y-4">
                           {products.slice(0, 3).map((product) => (
-                            <div key={product._id} className="flex items-center justify-between p-4 border rounded-lg">
+                            <div
+                              key={product._id}
+                              className="flex items-center justify-between p-4 border border-gray-200 rounded-xl hover:shadow-md transition-shadow"
+                            >
                               <div className="flex items-center space-x-4">
-                                <div className="w-12 h-12 bg-gradient-to-br from-[#4B0082] to-[#8A2BE2] rounded-lg flex items-center justify-center">
+                                <div className="w-12 h-12 bg-gradient-to-br from-[#8B5CF6] to-[#6D28D9] rounded-xl flex items-center justify-center">
                                   <Package className="w-6 h-6 text-white" />
                                 </div>
                                 <div>
-                                  <h4 className="font-medium">{product.name}</h4>
+                                  <h4 className="font-semibold text-gray-900">{product.name}</h4>
                                   <p className="text-sm text-gray-600">{product.category}</p>
                                 </div>
                               </div>
                               <div className="text-right">
-                                <p className="font-medium">
+                                <p className="font-semibold text-gray-900">
                                   ₹{product.pricePerUnit}/{product.unit}
                                 </p>
                                 <p className="text-sm text-gray-600">{product.stockQuantity} in stock</p>
@@ -369,6 +473,11 @@ export default function VendorDashboardPage() {
           {/* Products Tab */}
           {activeTab === "products" && (
             <div className="space-y-6">
+              <div className="text-center mb-8">
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">Product Management</h1>
+                <p className="text-gray-600">Manage your product inventory and listings</p>
+              </div>
+
               {isLoading ? (
                 <div className="flex items-center justify-center h-64">
                   <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
@@ -408,10 +517,9 @@ export default function VendorDashboardPage() {
                         </SelectContent>
                       </Select>
                     </div>
-
                     <Dialog open={isProductDialogOpen} onOpenChange={setIsProductDialogOpen}>
                       <DialogTrigger asChild>
-                        <Button className="bg-gradient-to-r from-[#4B0082] to-[#8A2BE2] hover:from-[#5B1092] hover:to-[#9A3BF2]">
+                        <Button className="bg-gradient-to-r from-[#8B5CF6] to-[#6D28D9] hover:from-[#7C3AED] hover:to-[#5B21B6]">
                           <Plus className="w-4 h-4 mr-2" />
                           Add Product
                         </Button>
@@ -423,7 +531,6 @@ export default function VendorDashboardPage() {
                             {editingProduct ? "Update your product information" : "Add a new product to your inventory"}
                           </DialogDescription>
                         </DialogHeader>
-
                         <form onSubmit={handleProductSubmit} className="space-y-4">
                           <div className="grid grid-cols-2 gap-4">
                             <div>
@@ -454,7 +561,6 @@ export default function VendorDashboardPage() {
                               </Select>
                             </div>
                           </div>
-
                           <div className="grid grid-cols-3 gap-4">
                             <div>
                               <Label htmlFor="unit">Unit</Label>
@@ -482,7 +588,10 @@ export default function VendorDashboardPage() {
                                 min="0"
                                 value={productForm.stockQuantity}
                                 onChange={(e) =>
-                                  setProductForm({ ...productForm, stockQuantity: Number.parseInt(e.target.value) || 0 })
+                                  setProductForm({
+                                    ...productForm,
+                                    stockQuantity: Number.parseInt(e.target.value) || 0,
+                                  })
                                 }
                                 required
                               />
@@ -496,13 +605,15 @@ export default function VendorDashboardPage() {
                                 step="0.01"
                                 value={productForm.pricePerUnit}
                                 onChange={(e) =>
-                                  setProductForm({ ...productForm, pricePerUnit: Number.parseFloat(e.target.value) || 0 })
+                                  setProductForm({
+                                    ...productForm,
+                                    pricePerUnit: Number.parseFloat(e.target.value) || 0,
+                                  })
                                 }
                                 required
                               />
                             </div>
                           </div>
-
                           <div>
                             <Label htmlFor="expiryDate">Expiry Date</Label>
                             <Input
@@ -512,7 +623,6 @@ export default function VendorDashboardPage() {
                               onChange={(e) => setProductForm({ ...productForm, expiryDate: e.target.value })}
                             />
                           </div>
-
                           <div>
                             <Label htmlFor="description">Description</Label>
                             <Textarea
@@ -522,7 +632,6 @@ export default function VendorDashboardPage() {
                               rows={3}
                             />
                           </div>
-
                           <div className="flex items-center space-x-2">
                             <Switch
                               id="isAvailable"
@@ -531,12 +640,11 @@ export default function VendorDashboardPage() {
                             />
                             <Label htmlFor="isAvailable">Available for sale</Label>
                           </div>
-
                           <div className="flex justify-end space-x-2 pt-4">
                             <Button type="button" variant="outline" onClick={resetProductForm}>
                               Cancel
                             </Button>
-                            <Button type="submit" className="bg-gradient-to-r from-[#4B0082] to-[#8A2BE2]">
+                            <Button type="submit" className="bg-gradient-to-r from-[#8B5CF6] to-[#6D28D9]">
                               <Save className="w-4 h-4 mr-2" />
                               {editingProduct ? "Update Product" : "Add Product"}
                             </Button>
@@ -549,7 +657,7 @@ export default function VendorDashboardPage() {
                   {/* Products Grid */}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {filteredProducts.map((product) => (
-                      <Card key={product._id} className="hover:shadow-lg transition-shadow">
+                      <Card key={product._id} className="hover:shadow-lg transition-shadow border-0 shadow-md">
                         <CardHeader className="pb-3">
                           <div className="flex items-start justify-between">
                             <div>
@@ -577,7 +685,9 @@ export default function VendorDashboardPage() {
                             </div>
                             <div className="flex justify-between items-center">
                               <span className="text-sm text-gray-600">Total Value:</span>
-                              <span className="font-medium text-green-600">₹{product.stockQuantity * product.pricePerUnit}</span>
+                              <span className="font-medium text-green-600">
+                                ₹{product.stockQuantity * product.pricePerUnit}
+                              </span>
                             </div>
                             {product.expiryDate && (
                               <div className="flex justify-between items-center">
@@ -588,7 +698,6 @@ export default function VendorDashboardPage() {
                             {product.description && (
                               <p className="text-sm text-gray-600 line-clamp-2">{product.description}</p>
                             )}
-
                             <div className="flex space-x-2 pt-2">
                               <Button
                                 size="sm"
@@ -625,7 +734,7 @@ export default function VendorDashboardPage() {
                       </p>
                       <Button
                         onClick={() => setIsProductDialogOpen(true)}
-                        className="bg-gradient-to-r from-[#4B0082] to-[#8A2BE2]"
+                        className="bg-gradient-to-r from-[#8B5CF6] to-[#6D28D9]"
                       >
                         <Plus className="w-4 h-4 mr-2" />
                         Add Product
@@ -639,11 +748,16 @@ export default function VendorDashboardPage() {
 
           {/* Profile Tab */}
           {activeTab === "profile" && (
-            <div className="max-w-4xl">
-              <Card>
+            <div className="max-w-4xl mx-auto">
+              <div className="text-center mb-8">
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">Business Profile</h1>
+                <p className="text-gray-600">Manage your business information and contact details</p>
+              </div>
+
+              <Card className="border-0 shadow-lg">
                 <CardHeader>
-                  <CardTitle>Business Profile</CardTitle>
-                  <CardDescription>Manage your business information and contact details</CardDescription>
+                  <CardTitle>Business Information</CardTitle>
+                  <CardDescription>Update your business details and contact information</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Tabs defaultValue="basic" className="w-full">
@@ -651,7 +765,6 @@ export default function VendorDashboardPage() {
                       <TabsTrigger value="basic">Basic Information</TabsTrigger>
                       <TabsTrigger value="location">Location & Address</TabsTrigger>
                     </TabsList>
-
                     <TabsContent value="basic" className="space-y-6 mt-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
@@ -677,15 +790,13 @@ export default function VendorDashboardPage() {
                           </div>
                         </div>
                       </div>
-
                       <div className="flex justify-end">
-                        <Button className="bg-gradient-to-r from-[#4B0082] to-[#8A2BE2]">
+                        <Button className="bg-gradient-to-r from-[#8B5CF6] to-[#6D28D9]">
                           <Save className="w-4 h-4 mr-2" />
                           Save Changes
                         </Button>
                       </div>
                     </TabsContent>
-
                     <TabsContent value="location" className="space-y-6 mt-6">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div className="md:col-span-2">
@@ -720,9 +831,8 @@ export default function VendorDashboardPage() {
                           />
                         </div>
                       </div>
-
                       <div className="flex justify-end">
-                        <Button className="bg-gradient-to-r from-[#4B0082] to-[#8A2BE2]">
+                        <Button className="bg-gradient-to-r from-[#8B5CF6] to-[#6D28D9]">
                           <Save className="w-4 h-4 mr-2" />
                           Update Location
                         </Button>
@@ -736,11 +846,16 @@ export default function VendorDashboardPage() {
 
           {/* Settings Tab */}
           {activeTab === "settings" && (
-            <div className="max-w-2xl space-y-6">
-              <Card>
+            <div className="max-w-2xl mx-auto space-y-6">
+              <div className="text-center mb-8">
+                <h1 className="text-3xl font-bold text-gray-900 mb-2">Account Settings</h1>
+                <p className="text-gray-600">Manage your account preferences and security</p>
+              </div>
+
+              <Card className="border-0 shadow-lg">
                 <CardHeader>
-                  <CardTitle>Account Settings</CardTitle>
-                  <CardDescription>Manage your account preferences and security</CardDescription>
+                  <CardTitle>Notification Preferences</CardTitle>
+                  <CardDescription>Choose how you want to receive notifications</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <div className="flex items-center justify-between">
@@ -750,7 +865,6 @@ export default function VendorDashboardPage() {
                     </div>
                     <Switch defaultChecked />
                   </div>
-
                   <div className="flex items-center justify-between">
                     <div>
                       <h4 className="font-medium">SMS Notifications</h4>
@@ -758,7 +872,6 @@ export default function VendorDashboardPage() {
                     </div>
                     <Switch />
                   </div>
-
                   <div className="flex items-center justify-between">
                     <div>
                       <h4 className="font-medium">Auto-restock Alerts</h4>
@@ -769,10 +882,10 @@ export default function VendorDashboardPage() {
                 </CardContent>
               </Card>
 
-              <Card>
+              <Card className="border-0 shadow-lg">
                 <CardHeader>
-                  <CardTitle>Security</CardTitle>
-                  <CardDescription>Manage your password and security settings</CardDescription>
+                  <CardTitle>Security Settings</CardTitle>
+                  <CardDescription>Manage your password and security preferences</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <Button variant="outline" className="w-full justify-start bg-transparent">
