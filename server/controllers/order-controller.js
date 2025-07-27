@@ -40,7 +40,9 @@ const placeOrder = async (req, res, next) => {
 // List user's orders
 const getUserOrders = async (req, res, next) => {
   try {
-    const userId = req.user?._id || req.query.userId;
+    console.log("Fetching user orders");
+    const userId = req.user?._id || req.userID || req.query.userId;
+    // console.log("User ID:", userId);
     const { limit = 20, skip = 0, sort = "-createdAt", status } = req.query;
     if (!userId) return res.status(400).json({ message: "Missing userId." });
     const filter = { buyer: userId, isDeleted: { $ne: true } };
