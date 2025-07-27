@@ -63,7 +63,12 @@ const OrderManagement = () => {
     }
   }
 
+  const {isLoggedIn} = useAuth();
+
   useEffect(() => {
+    if (!isLoggedIn) {
+    navigate("/login")
+  }
     fetchOrders()
   }, [])
 
