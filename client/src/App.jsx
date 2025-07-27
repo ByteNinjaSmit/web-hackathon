@@ -29,20 +29,20 @@ import VendorCompleteProfilePage from "./pages/vendor/Vendor-Complete-Profile-Pa
 
 
 //admin pages import
-import Dashboard from "./pages/admin/Dashboard";
-import PendingVerifications from "./pages/admin/PendingVerifications";
-import ApprovedSuppliers from "./pages/admin/ApprovedSuppliers";
-import RejectedSuppliers from "./pages/admin/RejectedSuppliers";
-import SupplierCommunication from "./pages/admin/SupplierCommunication";
+import Dashboard from "./pages/admin/Admin-Dashboard";
+import PendingVerifications from "./pages/admin/Admin-Pending-Verifications";
+import ApprovedSuppliers from "./pages/admin/Admin-Approved-Suppliers";
+import RejectedSuppliers from "./pages/admin/Admin-Rejected-Suppliers";
+import SupplierCommunication from "./pages/admin/Admin-Supplier-Communication";
 import VendorDashboardPage from "./pages/vendor/Vendor-Dashboard-Page";
 import StreetFoodDashboard from "./pages/client/StreetFoodDashboard";
-import SidebarMenuItem from "./pages/admin/layout";
+import SidebarMenuItem from "./pages/admin/Admin-Layout";
 import { GoogleOAuthProvider } from "@react-oauth/google";
-import AdminLogin from "./pages/admin/Login";
-import AdminProfile from "./pages/admin/Profile";
-import UserManagement from "./pages/admin/Users";
+import AdminLogin from "./pages/admin/Admin-Login";
+import AdminProfile from "./pages/admin/Admin-Profile";
+import UserManagement from "./pages/admin/Admin-Users";
 
-import Users from "./pages/admin/Users";
+import Users from "./pages/admin/Admin-Users";
 
 // ProtectedRoute component
 const ProtectedRoute = ({ children }) => {

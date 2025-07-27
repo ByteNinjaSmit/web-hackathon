@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Link, useLocation } from "react-router-dom"
+import { Link, useLocation, useNavigate } from "react-router-dom"
 import { Suspense } from "react"
 import {
   Bell,
@@ -40,6 +40,7 @@ import { cn } from "@/lib/utils"
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible"
 import { Outlet } from "react-router-dom"
 import { useAuth } from "@/store/auth"
+
 
 const sidebarMenuItems = [
   {
@@ -121,7 +122,7 @@ const sidebarMenuItems = [
         items: [
           { title: "Performance Metrics" /*, href: "/admin/analytics/performance" */ },
           { title: "Supplier Analytics" /*, href: "/admin/analytics/suppliers"*/ },
-          { title: "Revenue Reports" /* href: "/admin/analytics/revenue"*/},
+          { title: "Revenue Reports" /* href: "/admin/analytics/revenue"*/ },
         ],
       },
       {
@@ -161,9 +162,11 @@ const notifications = [
   },
 ]
 
+
 function SidebarMenuItem({ item, pathname, level = 0 }) {
   const [isExpanded, setIsExpanded] = useState(false)
   const Icon = item.icon
+
 
   if (item.type === "single") {
     const isActive = pathname === item.href
@@ -238,8 +241,14 @@ export default function AdminLayout({ children }) {
   const [searchQuery, setSearchQuery] = useState("")
   const [isSearchFocused, setIsSearchFocused] = useState(false)
   const [unreadNotifications, setUnreadNotifications] = useState(2)
+  const navigate = useNavigate()
+  const { API, LogoutUser, isLoggedIn, isAdmin, isVendor } = useAuth()
 
-  const { API, LogoutUser } = useAuth()
+
+  if (!isLoggedIn) {
+    navigate("/adminlogin")
+  }
+
 
   const logout = () => {
     LogoutUser()
@@ -349,7 +358,7 @@ export default function AdminLayout({ children }) {
                       <Settings className="mr-2 h-4 w-4 text-[#8A2BE2]" />
                       <span>Settings</span>
                     </DropdownMenuItem> */}
-                    
+
                     {/* <DropdownMenuItem className="cursor-pointer p-3 rounded-xl mx-2 my-1 hover:bg-purple-50 focus:bg-purple-50">
                       <Activity className="mr-2 h-4 w-4 text-[#8A2BE2]" />
                       <span>Activity Log</span>

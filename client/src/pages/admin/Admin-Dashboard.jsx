@@ -239,13 +239,12 @@ export default function EnhancedDashboard() {
                 >
                   <div className="flex-shrink-0">
                     <div
-                      className={`w-4 h-4 rounded-full mt-2 ${
-                        alert.type === "error"
+                      className={`w-4 h-4 rounded-full mt-2 ${alert.type === "error"
                           ? "bg-gradient-to-r from-red-400 to-red-500"
                           : alert.type === "warning"
                             ? "bg-gradient-to-r from-amber-400 to-orange-500"
                             : "bg-gradient-to-r from-blue-400 to-indigo-500"
-                      }`}
+                        }`}
                     />
                   </div>
                   <div className="flex-1">
