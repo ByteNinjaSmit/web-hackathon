@@ -70,7 +70,6 @@ export const AuthProvider = ({ children }) => {
         storeTokenInCookies(token);
         setUser(user);
         setIsGoogleAccount(user?.isGoogleAccount || false);
-        setIsProfileComplete(user?.isProfileComplete || false);
     };
 
     // Update profile (for profile completion)

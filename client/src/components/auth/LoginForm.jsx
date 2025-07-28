@@ -47,8 +47,8 @@ const AuthForms = () => {
         if (response.status === 200) {
           const data = response.data;
           toast.success("Google login successful!");
-          
-          storeTokenInCookies(data.token);
+          console.log(`Data login`, data);
+          storeTokenInCookies(data.token,data.user);
           navigate("/");
         }
       }
