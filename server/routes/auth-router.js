@@ -17,7 +17,7 @@ router.post("/vendor/login", authController.loginVendor);
 router.post("/vendor/register", authController.registerVendor);
 
 router.post("/admin/login", authController.loginAdmin);
-router.get("/current-user",authController.getCurrentUser)
+router.get("/current-user",authMiddleware,authController.getCurrentUser)
 
 // User Profile Update (requires authentication)
 router.put("/user/update-profile", authMiddleware, authController.updateUserProfile);
